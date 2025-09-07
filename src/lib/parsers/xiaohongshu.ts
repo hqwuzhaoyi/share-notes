@@ -27,58 +27,188 @@ export class XiaohongshuParser extends AbstractBaseParser {
     let page: any = null;
 
     try {
+      // 启动浏览器，添加反检测参数
       browser = await chromium.launch({
         headless: true,
         args: [
           '--no-sandbox',
           '--disable-setuid-sandbox',
-          '--disable-dev-shm-usage'
+          '--disable-dev-shm-usage',
+          '--disable-blink-features=AutomationControlled',
+          '--disable-web-security',
+          '--disable-features=VizDisplayCompositor,ScriptStreaming',
+          '--no-first-run',
+          '--no-default-browser-check',
+          '--disable-default-apps',
+          '--disable-popup-blocking',
+          '--disable-translate',
+          '--disable-background-timer-throttling',
+          '--disable-renderer-backgrounding',
+          '--disable-backgrounding-occluded-windows',
+          '--disable-client-side-phishing-detection',
+          '--disable-sync',
+          '--metrics-recording-only',
+          '--no-report-upload',
+          '--disable-ipc-flooding-protection'
         ]
       });
 
-      page = await browser.newPage();
+      // 使用Playwright内置的iPhone设备模拟
+      const iPhoneDevice = {
+        userAgent: 'Mozilla/5.0 (iPhone; CPU iPhone OS 17_0 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.0 Mobile/15E148 Safari/604.1',
+        viewport: { width: 375, height: 812 },
+        deviceScaleFactor: 3,
+        isMobile: true,
+        hasTouch: true
+      };
+
+      page = await browser.newPage(iPhoneDevice);
+      
+      // 注入反检测JavaScript
+      await page.addInitScript(() => {
+        // 隐藏webdriver属性
+        Object.defineProperty(navigator, 'webdriver', {
+          get: () => undefined,
+        });
+        
+        // 修复Chrome检测
+        Object.defineProperty(navigator, 'plugins', {
+          get: () => [1, 2, 3, 4, 5],
+        });
+        
+        // 修复语言检测
+        Object.defineProperty(navigator, 'languages', {
+          get: () => ['zh-CN', 'zh', 'en'],
+        });
+        
+        // 修复权限API
+        const originalQuery = window.navigator.permissions.query;
+        window.navigator.permissions.query = (parameters: any) => (
+          parameters.name === 'notifications' ?
+            Promise.resolve({ state: Notification.permission } as any) :
+            originalQuery(parameters)
+        );
+      });
       
       // 确保浏览器和页面连接正常
       if (!browser.isConnected() || page.isClosed()) {
         throw new Error('浏览器或页面连接异常');
       }
 
-      // 设置更真实的移动端headers，模拟小红书App访问
+      // 设置真实的Chrome Mobile headers
       await page.setExtraHTTPHeaders({
-        'User-Agent': 'Mozilla/5.0 (iPhone; CPU iPhone OS 17_0 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Mobile/15E148 MicroMessenger/8.0.40(0x18002829) NetType/WIFI Language/zh_CN',
-        'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,image/apng,*/*;q=0.8',
+        'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.7',
         'Accept-Language': 'zh-CN,zh;q=0.9,en;q=0.8',
         'Accept-Encoding': 'gzip, deflate, br',
         'Cache-Control': 'max-age=0',
+        'Sec-Ch-Ua': '"Chromium";v="118", "Google Chrome";v="118", "Not=A?Brand";v="99"',
+        'Sec-Ch-Ua-Mobile': '?1',
+        'Sec-Ch-Ua-Platform': '"iOS"',
         'Sec-Fetch-Dest': 'document',
         'Sec-Fetch-Mode': 'navigate',
         'Sec-Fetch-Site': 'none',
+        'Sec-Fetch-User': '?1',
         'Upgrade-Insecure-Requests': '1',
-        'Referer': 'https://www.xiaohongshu.com/'
+        'X-Requested-With': 'com.android.browser'
       });
-      
-      await page.setViewportSize({ width: 375, height: 812 });
 
-      // 导航到页面，简化重试机制
+      // 多重策略访问页面
       let finalUrl = url;
+      let success = false;
       
+      // 策略1: 直接访问
       try {
-        console.log(`🔄 访问URL: ${url}`);
+        console.log(`🔄 策略1 - iPhone Safari直接访问: ${url}`);
         
         const response = await page.goto(url, {
           waitUntil: 'domcontentloaded',
-          timeout: Math.min(opts.timeout || 15000, 10000), // 限制最大超时为10秒
+          timeout: 8000,
         });
         
-        // 检查最终URL和状态
         finalUrl = page.url();
         console.log(`📍 最终URL: ${finalUrl}`);
         console.log(`📊 响应状态码: ${response?.status()}`);
         
-      } catch (gotoError) {
-        console.warn(`❌ 页面导航失败: ${gotoError}，继续解析现有内容...`);
-        // 即使导航失败，也尝试获取页面内容
-        await page.waitForTimeout(1000);
+        // 检查是否被重定向到登录页面
+        if (!finalUrl.includes('/login') && response?.status() === 200) {
+          success = true;
+          console.log(`✅ 策略1成功访问`);
+        } else {
+          console.log(`⚠️ 策略1被重定向到登录页面`);
+        }
+        
+      } catch (error) {
+        console.warn(`❌ 策略1失败: ${error}`);
+      }
+      
+      // 策略2: 更换设备类型为Android Chrome
+      if (!success) {
+        try {
+          console.log(`🔄 策略2 - Android Chrome访问`);
+          
+          await page.setExtraHTTPHeaders({
+            'User-Agent': 'Mozilla/5.0 (Linux; Android 13; SM-G991B) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/118.0.0.0 Mobile Safari/537.36',
+            'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.7',
+            'Accept-Language': 'zh-CN,zh;q=0.9,en;q=0.8',
+            'Sec-Ch-Ua': '"Chromium";v="118", "Google Chrome";v="118", "Not=A?Brand";v="99"',
+            'Sec-Ch-Ua-Mobile': '?1',
+            'Sec-Ch-Ua-Platform': '"Android"'
+          });
+          
+          await page.waitForTimeout(2000);
+          const response = await page.goto(url, {
+            waitUntil: 'domcontentloaded',
+            timeout: 8000,
+          });
+          
+          finalUrl = page.url();
+          console.log(`📍 策略2最终URL: ${finalUrl}`);
+          
+          if (!finalUrl.includes('/login') && response?.status() === 200) {
+            success = true;
+            console.log(`✅ 策略2成功访问`);
+          }
+          
+        } catch (error) {
+          console.warn(`❌ 策略2失败: ${error}`);
+        }
+      }
+      
+      // 策略3: 桌面Chrome访问（最后的尝试）
+      if (!success) {
+        try {
+          console.log(`🔄 策略3 - 桌面Chrome访问`);
+          
+          await page.setViewportSize({ width: 1920, height: 1080 });
+          await page.setExtraHTTPHeaders({
+            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/118.0.0.0 Safari/537.36',
+            'Sec-Ch-Ua-Mobile': '?0',
+            'Sec-Ch-Ua-Platform': '"Windows"'
+          });
+          
+          await page.waitForTimeout(1500);
+          const response = await page.goto(url, {
+            waitUntil: 'domcontentloaded',
+            timeout: 8000,
+          });
+          
+          finalUrl = page.url();
+          console.log(`📍 策略3最终URL: ${finalUrl}`);
+          
+          if (response?.status() === 200) {
+            console.log(`✅ 策略3获得响应，继续解析`);
+          }
+          
+        } catch (error) {
+          console.warn(`❌ 策略3失败: ${error}，继续解析现有内容...`);
+          await page.waitForTimeout(1000);
+        }
+      }
+      
+      if (success) {
+        console.log(`🎉 成功访问小红书内容，无需登录`);
+      } else {
+        console.log(`⚠️ 所有策略均被重定向，但继续尝试解析页面内容...`);
       }
 
       // 等待内容加载
