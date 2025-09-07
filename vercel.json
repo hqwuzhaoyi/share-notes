@@ -24,7 +24,9 @@
     }
   ],
   "env": {
-    "PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD": "1"
+    "PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD": "1",
+    "NODE_ENV": "production"
   },
+  "regions": ["hkg1"],
   "buildCommand": "npm run build"
 }

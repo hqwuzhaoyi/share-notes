@@ -13,7 +13,7 @@ export class XiaohongshuParser extends AbstractBaseParser {
   async parse(url: string, options?: ParserOptions): Promise<ParsedContent> {
     const opts = this.mergeOptions({ 
       ...options, 
-      usePlaywright: true, // 小红书必须使用Playwright
+      usePlaywright: !this.isVercelEnvironment(), // Vercel环境下不使用Playwright
       timeout: 15000 // 增加超时时间
     });
 
@@ -21,6 +21,13 @@ export class XiaohongshuParser extends AbstractBaseParser {
     if (options?.preloadedHtml) {
       console.log('📄 使用预取的HTML内容进行解析...');
       return this.parseFromHtml(options.preloadedHtml, url);
+    }
+
+    // Vercel环境下，优先建议使用preloadedHtml
+    if (this.isVercelEnvironment()) {
+      console.log('🌐 检测到Vercel生产环境，建议使用preloadedHtml以获得最佳效果');
+      // 仍然尝试ofetch解析，但成功率可能较低
+      return this.parseWithOfetch(url, opts);
     }
 
     let browser: any = null;
@@ -673,5 +680,56 @@ export class XiaohongshuParser extends AbstractBaseParser {
     }
 
     return undefined;
+  }
+
+  // 检测是否为Vercel环境
+  private isVercelEnvironment(): boolean {
+    return process.env.VERCEL === '1' || process.env.VERCEL_ENV !== undefined;
+  }
+
+  // Vercel环境下使用ofetch进行解析
+  private async parseWithOfetch(url: string, options?: ParserOptions): Promise<ParsedContent> {
+    try {
+      console.log('🌐 使用ofetch解析（Vercel环境）...');
+      
+      // 使用ofetch获取页面内容
+      const response = await fetch(url, {
+        headers: {
+          'User-Agent': 'Mozilla/5.0 (iPhone; CPU iPhone OS 17_0 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.0 Mobile/15E148 Safari/604.1',
+          'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
+          'Accept-Language': 'zh-CN,zh;q=0.9,en;q=0.8',
+          'Accept-Encoding': 'gzip, deflate, br',
+          'Cache-Control': 'no-cache',
+          'Pragma': 'no-cache'
+        },
+        signal: AbortSignal.timeout(options?.timeout || 15000)
+      });
+
+      if (!response.ok) {
+        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+      }
+
+      const html = await response.text();
+      
+      if (html.includes('login') || html.includes('登录')) {
+        console.warn('⚠️ 检测到登录页面，内容可能受限');
+      }
+
+      return this.parseFromHtml(html, url);
+
+    } catch (error) {
+      console.error(`ofetch解析失败: ${error}`);
+      
+      // 返回错误信息，但不抛出异常
+      return {
+        title: '解析失败',
+        content: `Vercel环境下无法访问该小红书内容。错误信息: ${error instanceof Error ? error.message : '未知错误'}。建议使用iOS快捷指令预取HTML内容，或在本地环境中测试。`,
+        images: [],
+        author: undefined,
+        publishedAt: new Date(),
+        platform: this.platform,
+        originalUrl: url,
+      };
+    }
   }
 }

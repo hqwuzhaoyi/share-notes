@@ -27,7 +27,7 @@
 
 - Node.js 18+
 - npm 或 yarn
-- OpenAI API Key (用于AI功能，可选)
+- AI API Key (用于AI功能，支持自定义LLM和OpenAI)
 
 ### 安装依赖
 
@@ -42,10 +42,15 @@ npm install
 ```bash
 # 基础配置
 NODE_ENV=development
-
-# AI功能配置 (可选)
-OPENAI_API_KEY=your_openai_api_key_here
 ENABLE_AI=true
+
+# 🎯 方案1: 自定义LLM配置 (推荐 - 成本更低)
+LLM_API_KEY=your_llm_api_key_here
+LLM_API_BASE_URL=https://dashscope.aliyuncs.com/compatible-mode/v1
+LLM_MODEL=qwen-plus
+
+# 🔄 方案2: OpenAI配置 (备选)
+# OPENAI_API_KEY=your_openai_api_key_here
 
 # Playwright配置 (Vercel部署时需要)
 PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD=1
@@ -57,7 +62,7 @@ PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD=1
 npm run dev
 ```
 
-服务将在 `http://localhost:3000` 启动。
+服务将在 `http://localhost:4000` 启动。
 
 ### API使用
 
@@ -87,7 +92,22 @@ Content-Type: application/json
     "enable_summary": true,
     "enable_title_optimization": true,
     "enable_categorization": true,
-    "model": "gpt-3.5-turbo"
+    "model": "qwen-plus"
+  }
+}
+```
+
+**iOS快捷指令预取HTML** 📱 (Vercel部署推荐)
+```http
+POST /api/parse
+Content-Type: application/json
+
+{
+  "url": "https://xiaohongshu.com/explore/xxxxx",
+  "output_format": "flomo",
+  "ai_enhance": true,
+  "options": {
+    "preloadedHtml": "从iOS快捷指令获取的完整HTML内容..."
   }
 }
 ```
@@ -195,12 +215,33 @@ Content-Type: application/json
        "ai_options": {
          "enable_summary": true,
          "enable_title_optimization": true,
-         "enable_categorization": true
+         "enable_categorization": true,
+         "model": "qwen-plus"
        }
      }
    - 头部: Content-Type: application/json
 3. 【获取字典值】→ 获取响应中的 ios_url
 4. 【打开URL】→ 打开获取到的URL
+```
+
+**Vercel环境增强版** (推荐) 🌐
+```
+1. 【获取输入】→ 从快捷指令输入获取URL
+2. 【获取网页内容】→ 获取页面HTML内容  
+3. 【获取网页内容】→ 
+   - URL: https://your-domain.vercel.app/api/parse
+   - 方法: POST
+   - 请求体: {
+       "url": "输入的URL", 
+       "output_format": "flomo",
+       "ai_enhance": true,
+       "options": {
+         "preloadedHtml": "步骤2获取的HTML内容"
+       }
+     }
+   - 头部: Content-Type: application/json
+4. 【获取字典值】→ 获取响应中的 ios_url
+5. 【打开URL】→ 打开获取到的URL
 ```
 
 ### 3. 使用方式
@@ -210,28 +251,54 @@ Content-Type: application/json
 
 ## 部署
 
-### Vercel部署
+### 🚀 Vercel部署 (推荐)
 
-1. Fork此仓库
-2. 在Vercel中导入项目
-3. 设置环境变量（可选）
-4. 部署完成
+#### 快速部署
 
-### 环境变量
+1. **Fork仓库**: Fork此仓库到你的GitHub账户
+2. **连接Vercel**: 在[vercel.com](https://vercel.com)导入项目
+3. **配置环境变量**: 在Vercel项目设置中添加以下变量
+4. **自动部署**: 推送代码即可自动部署
+
+#### 必需的环境变量
 
 ```bash
-# 基础配置
+# 🔧 基础配置
 NODE_ENV=production
-PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD=1
-
-# AI功能配置
-OPENAI_API_KEY=your_openai_api_key_here
+PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD=1  # Vercel必需！
 ENABLE_AI=true
 
-# 可选配置
+# 🤖 AI配置 (二选一)
+
+# 方案1: 自定义LLM (推荐，成本节省60-80%)
+LLM_API_KEY=your_llm_api_key_here
+LLM_API_BASE_URL=https://dashscope.aliyuncs.com/compatible-mode/v1
+LLM_MODEL=qwen-plus
+
+# 方案2: OpenAI (备选)
+# OPENAI_API_KEY=your_openai_api_key_here
+
+# 🔧 可选配置
 API_TIMEOUT=30000
 AI_DEBUG=false
+AI_DAILY_COST_LIMIT=10
+AI_MAX_COST_PER_REQUEST=0.5
 ```
+
+#### ⚠️ Vercel部署重要提醒
+
+**Playwright限制**: Vercel serverless环境不支持浏览器，系统会自动:
+
+1. **自动降级**: 使用`fetch`进行基础解析
+2. **智能提示**: 建议使用`preloadedHtml`获得最佳效果
+3. **性能优化**: fetch比Playwright更快更稳定
+
+**推荐使用方式**:
+- 🎯 **iOS快捷指令**: 预取HTML内容传递给API
+- 📱 **最佳实践**: 结合iOS快捷指令使用`preloadedHtml`参数
+- 🚀 **高成功率**: 与本地开发环境相同的解析效果
+
+详细部署指南请参考: [DEPLOYMENT.md](./DEPLOYMENT.md)
 
 ## 开发
 
@@ -278,13 +345,17 @@ npm test
 - **部署**: Vercel
 
 ### 🤖 AI技术栈
-- **AI框架**: LangChain
-- **语言模型**: OpenAI GPT系列
-- **支持模型**: 
-  - gpt-3.5-turbo (快速经济)
-  - gpt-4o-mini (平衡性能)
-  - gpt-4o (最高质量)
-- **功能特性**: 智能缓存、成本优化、错误重试
+- **AI框架**: LangChain with structured output parsing
+- **支持的LLM**:
+  - **阿里云通义千问**: qwen-plus (默认，成本最优)
+  - **OpenAI GPT**: gpt-3.5-turbo, gpt-4o-mini, gpt-4o
+  - **自定义LLM**: 支持OpenAI兼容接口
+- **功能特性**: 
+  - 🔄 智能缓存 (24小时TTL)
+  - 💰 成本优化 (比OpenAI节省60-80%)
+  - 🔁 自动重试和错误修复
+  - 📊 结构化输出解析
+  - 🎯 分层模型选择
 
 ## 注意事项
 
@@ -295,20 +366,26 @@ npm test
 4. **隐私**: 不存储解析内容，仅实时处理
 
 ### 🤖 AI功能注意事项
-1. **API成本**: AI功能需要OpenAI API，产生使用费用
-2. **响应时间**: AI增强会增加2-5秒的处理时间
+1. **API成本**: AI功能需要LLM API密钥，产生使用费用
+2. **响应时间**: AI增强会增加1-3秒的处理时间
 3. **成本控制**: 
-   - 内置智能缓存，避免重复调用
-   - 自动选择性价比最高的模型
-   - 可选择性启用不同AI功能
-4. **可用性**: AI功能需要稳定的网络连接到OpenAI API
-5. **隐私**: AI处理的内容会发送到OpenAI，请注意隐私政策
+   - ✅ 智能缓存24小时，避免重复调用
+   - ✅ 自动选择成本最优模型 (推荐Qwen Plus)
+   - ✅ 可选择性启用不同AI功能
+   - ✅ 每日成本限额保护
+4. **可用性**: 需要稳定网络连接到LLM API
+5. **隐私**: AI处理内容会发送到第三方LLM服务
 
-### 💰 成本估算
-- 摘要生成: ~$0.001-0.003/次
-- 标题优化: ~$0.0005-0.001/次  
-- 内容分类: ~$0.0005-0.001/次
-- 智能提取: ~$0.002-0.005/次
+### 💰 成本估算对比
+
+| 功能 | Qwen Plus | OpenAI GPT-3.5 | 节省比例 |
+|------|-----------|----------------|----------|
+| 摘要生成 | ~$0.0004-0.0012 | ~$0.001-0.003 | 60-70% |
+| 标题优化 | ~$0.0002-0.0006 | ~$0.0005-0.001 | 60-80% |
+| 内容分类 | ~$0.0002-0.0006 | ~$0.0005-0.001 | 60-80% |
+| 智能提取 | ~$0.0008-0.002 | ~$0.002-0.005 | 60-75% |
+
+**推荐配置**: 使用Qwen Plus可节省60-80%的AI成本，同时保持相近的处理效果。
 
 *实际成本取决于内容长度和选择的模型*
 
