@@ -1,6 +1,8 @@
-# iOS内容解析服务
+# share-notes (iOS内容解析服务)
 
-专为iOS快捷指令设计的**智能内容解析服务**，支持解析小红书、B站、微信公众号等平台的链接内容，并直接输出到flomo或iOS备忘录应用。
+Content parsing & AI-enhanced note sharing service
+
+专为 iOS 快捷指令设计的 **智能内容解析与 AI 增强笔记服务**，支持解析小红书、B站、微信公众号等平台内容，并生成适合 flomo / 备忘录的结构化笔记。
 
 🆕 **v2.0 新增功能**：集成LangChain AI助手，提供内容摘要、标题优化、智能分类等AI增强功能！
 
