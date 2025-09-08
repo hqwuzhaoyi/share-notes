@@ -7,6 +7,12 @@ export default defineConfig({
     environment: 'node',
     setupFiles: ['./src/test/setup.ts'],
     testTimeout: 30000, // 30秒超时，适合Playwright测试
+    coverage: {
+      provider: 'v8',
+      reportsDirectory: './coverage',
+      reporter: ['text', 'lcov', 'html'],
+      exclude: ['src/test/**', '**/node_modules/**']
+    }
   },
   resolve: {
     alias: {

@@ -1,0 +1,10 @@
+{
+  "name": "ShareNotes 基础解析",
+  "description": "输入内容链接，调用 share-notes API 解析并打开 flomo 笔记创建界面。",
+  "steps": [
+    {"action": "AskForInput", "prompt": "请输入内容链接"},
+    {"action": "GetContentsOfURL", "method": "POST", "url": "https://your-domain.vercel.app/api/parse", "headers": {"Content-Type": "application/json"}, "body": {"url": "{{Input}}", "output_format": "flomo"}},
+    {"action": "GetDictionaryValue", "key": "ios_url"},
+    {"action": "OpenURL"}
+  ]
+}

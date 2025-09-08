@@ -1,16 +1,12 @@
-<div align="center">
-
 # share-notes (iOS内容解析服务)
 
-[![License: MIT](https://img.shields.io/badge/license-MIT-green.svg)](./LICENSE) [![Node](https://img.shields.io/badge/node-%3E=18-brightgreen.svg)](#) [![CI](https://img.shields.io/badge/CI-GitHub%20Actions-blue.svg)](.github/workflows/ci.yml)
+[![License: MIT](https://img.shields.io/badge/license-MIT-green.svg)](./LICENSE) [![Node](https://img.shields.io/badge/node-%3E=18-brightgreen.svg)](#) [![CI](https://img.shields.io/badge/CI-GitHub%20Actions-blue.svg)](.github/workflows/ci.yml) [![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository=https://github.com/hqwuzhaoyi/share-notes)
 
 Content parsing & AI-enhanced note sharing service
 
 专为 iOS 快捷指令设计的 **智能内容解析与 AI 增强笔记服务**，支持解析小红书、B站、微信公众号等平台内容，并生成适合 flomo / 备忘录的结构化笔记。
 
 🆕 v2.0 新增：集成 LangChain AI 助手，提供内容摘要、标题优化、智能分类等 AI 增强功能。
-
-</div>
 
 ## 特性
 
@@ -404,3 +400,20 @@ npm test
 ## 许可证
 
 MIT License
+
+---
+
+### 📊 覆盖率 & 安全
+
+启用覆盖率（Vitest）与依赖安全检查：
+
+```bash
+npm run test:coverage   # 生成覆盖率报告 ./coverage
+npm audit --production  # 生产依赖安全检查
+```
+
+CI 中：
+- 运行 `npm run test:unit -- --coverage` 生成并上传 artifact
+- 运行 `npm audit --audit-level=high` （不阻塞低等级问题）
+
+> 若需集成 Codecov / Coveralls，可在 CI 添加上传步骤。

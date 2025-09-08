@@ -9,6 +9,7 @@
     "lint": "eslint",
     "test": "node test/test-api.js",
     "test:unit": "vitest",
+  "test:coverage": "vitest --coverage",
     "test:ui": "vitest --ui",
     "test:xiaohongshu": "vitest src/test/parsers/xiaohongshu.test.ts",
     "postinstall": "npx playwright install chromium",
