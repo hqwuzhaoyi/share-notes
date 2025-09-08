@@ -1,6 +1,6 @@
 # share-notes (iOS内容解析服务)
 
-[![License: MIT](https://img.shields.io/badge/license-MIT-green.svg)](./LICENSE) [![Node](https://img.shields.io/badge/node-%3E=18-brightgreen.svg)](#) [![CI](https://img.shields.io/badge/CI-GitHub%20Actions-blue.svg)](.github/workflows/ci.yml) [![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository=https://github.com/hqwuzhaoyi/share-notes)
+[![License: MIT](https://img.shields.io/badge/license-MIT-green.svg)](./LICENSE) ![Node Version](https://img.shields.io/badge/node-%3E=18-brightgreen.svg) [![CI](https://img.shields.io/badge/CI-GitHub%20Actions-blue.svg)](.github/workflows/ci.yml) [![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository=https://github.com/hqwuzhaoyi/share-notes)
 
 Content parsing & AI-enhanced note sharing service
 
@@ -11,6 +11,7 @@ Content parsing & AI-enhanced note sharing service
 ## 特性
 
 ### 🔧 基础功能
+
 - 🚀 **多平台支持**: 支持小红书、B站、微信公众号等主流平台
 - 🔄 **智能解析策略**: ofetch轻量级解析 + Playwright动态解析
 - 📱 **iOS集成**: 直接输出flomo和备忘录的URL scheme
@@ -18,6 +19,7 @@ Content parsing & AI-enhanced note sharing service
 - 🛡️ **安全可靠**: URL验证和SSRF防护
 
 ### 🤖 AI增强功能 (v2.0)
+
 - 📝 **智能摘要**: 为长文本自动生成简洁摘要
 - ✨ **标题优化**: 生成更适合笔记应用的标题
 - 🏷️ **内容分类**: 自动识别内容类型和主题标签
@@ -73,6 +75,7 @@ npm run dev
 #### 主要端点
 
 #### 基础解析
+
 ```http
 POST /api/parse
 Content-Type: application/json
@@ -84,6 +87,7 @@ Content-Type: application/json
 ```
 
 #### AI增强解析 🤖
+
 ```http
 POST /api/parse
 Content-Type: application/json
@@ -102,6 +106,7 @@ Content-Type: application/json
 ```
 
 #### iOS快捷指令预取HTML 📱 (Vercel 部署推荐)
+
 ```http
 POST /api/parse
 Content-Type: application/json
@@ -119,6 +124,7 @@ Content-Type: application/json
 #### 响应格式
 
 #### 基础响应
+
 ```json
 {
   "success": true,
@@ -137,6 +143,7 @@ Content-Type: application/json
 ```
 
 #### AI增强响应 ✨
+
 ```json
 {
   "success": true,
@@ -195,7 +202,8 @@ Content-Type: application/json
 ### 2. 快捷指令步骤
 
 #### 基础版本
-```
+
+```text
 1. 【获取输入】→ 从快捷指令输入获取URL
 2. 【获取网页内容】→
    - URL: https://your-domain.vercel.app/api/parse
@@ -207,7 +215,8 @@ Content-Type: application/json
 ```
 
 #### AI增强版本 🤖
-```
+
+```text
 1. 【获取输入】→ 从快捷指令输入获取URL
 2. 【获取网页内容】→
    - URL: https://your-domain.vercel.app/api/parse
@@ -229,7 +238,8 @@ Content-Type: application/json
 ```
 
 #### Vercel 环境增强版 (推荐) 🌐
-```
+
+```text
 1. 【获取输入】→ 从快捷指令输入获取URL
 2. 【获取网页内容】→ 获取页面HTML内容
 3. 【获取网页内容】→
