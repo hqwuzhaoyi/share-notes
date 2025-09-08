@@ -1,10 +1,16 @@
+<div align="center">
+
 # share-notes (iOS内容解析服务)
+
+[![License: MIT](https://img.shields.io/badge/license-MIT-green.svg)](./LICENSE) [![Node](https://img.shields.io/badge/node-%3E=18-brightgreen.svg)](#) [![CI](https://img.shields.io/badge/CI-GitHub%20Actions-blue.svg)](.github/workflows/ci.yml)
 
 Content parsing & AI-enhanced note sharing service
 
 专为 iOS 快捷指令设计的 **智能内容解析与 AI 增强笔记服务**，支持解析小红书、B站、微信公众号等平台内容，并生成适合 flomo / 备忘录的结构化笔记。
 
-🆕 **v2.0 新增功能**：集成LangChain AI助手，提供内容摘要、标题优化、智能分类等AI增强功能！
+🆕 v2.0 新增：集成 LangChain AI 助手，提供内容摘要、标题优化、智能分类等 AI 增强功能。
+
+</div>
 
 ## 特性
 
@@ -70,7 +76,7 @@ npm run dev
 
 #### 主要端点
 
-**基础解析**
+#### 基础解析
 ```http
 POST /api/parse
 Content-Type: application/json
@@ -81,7 +87,7 @@ Content-Type: application/json
 }
 ```
 
-**AI增强解析** 🤖
+#### AI增强解析 🤖
 ```http
 POST /api/parse
 Content-Type: application/json
@@ -99,7 +105,7 @@ Content-Type: application/json
 }
 ```
 
-**iOS快捷指令预取HTML** 📱 (Vercel部署推荐)
+#### iOS快捷指令预取HTML 📱 (Vercel 部署推荐)
 ```http
 POST /api/parse
 Content-Type: application/json
@@ -116,13 +122,13 @@ Content-Type: application/json
 
 #### 响应格式
 
-**基础响应**
+#### 基础响应
 ```json
 {
   "success": true,
   "data": {
     "title": "内容标题",
-    "content": "正文内容", 
+    "content": "正文内容",
     "images": ["图片URL1", "图片URL2"],
     "author": "作者信息",
     "platform": "xiaohongshu",
@@ -134,7 +140,7 @@ Content-Type: application/json
 }
 ```
 
-**AI增强响应** ✨
+#### AI增强响应 ✨
 ```json
 {
   "success": true,
@@ -192,10 +198,10 @@ Content-Type: application/json
 
 ### 2. 快捷指令步骤
 
-**基础版本**
+#### 基础版本
 ```
 1. 【获取输入】→ 从快捷指令输入获取URL
-2. 【获取网页内容】→ 
+2. 【获取网页内容】→
    - URL: https://your-domain.vercel.app/api/parse
    - 方法: POST
    - 请求体: {"url": "输入的URL", "output_format": "flomo"}
@@ -204,14 +210,14 @@ Content-Type: application/json
 4. 【打开URL】→ 打开获取到的URL
 ```
 
-**AI增强版本** 🤖
+#### AI增强版本 🤖
 ```
 1. 【获取输入】→ 从快捷指令输入获取URL
-2. 【获取网页内容】→ 
+2. 【获取网页内容】→
    - URL: https://your-domain.vercel.app/api/parse
    - 方法: POST
    - 请求体: {
-       "url": "输入的URL", 
+       "url": "输入的URL",
        "output_format": "flomo",
        "ai_enhance": true,
        "ai_options": {
@@ -226,15 +232,15 @@ Content-Type: application/json
 4. 【打开URL】→ 打开获取到的URL
 ```
 
-**Vercel环境增强版** (推荐) 🌐
+#### Vercel 环境增强版 (推荐) 🌐
 ```
 1. 【获取输入】→ 从快捷指令输入获取URL
-2. 【获取网页内容】→ 获取页面HTML内容  
-3. 【获取网页内容】→ 
+2. 【获取网页内容】→ 获取页面HTML内容
+3. 【获取网页内容】→
    - URL: https://your-domain.vercel.app/api/parse
    - 方法: POST
    - 请求体: {
-       "url": "输入的URL", 
+       "url": "输入的URL",
        "output_format": "flomo",
        "ai_enhance": true,
        "options": {
@@ -352,7 +358,7 @@ npm test
   - **阿里云通义千问**: qwen-plus (默认，成本最优)
   - **OpenAI GPT**: gpt-3.5-turbo, gpt-4o-mini, gpt-4o
   - **自定义LLM**: 支持OpenAI兼容接口
-- **功能特性**: 
+- **功能特性**:
   - 🔄 智能缓存 (24小时TTL)
   - 💰 成本优化 (比OpenAI节省60-80%)
   - 🔁 自动重试和错误修复
@@ -370,7 +376,7 @@ npm test
 ### 🤖 AI功能注意事项
 1. **API成本**: AI功能需要LLM API密钥，产生使用费用
 2. **响应时间**: AI增强会增加1-3秒的处理时间
-3. **成本控制**: 
+3. **成本控制**:
    - ✅ 智能缓存24小时，避免重复调用
    - ✅ 自动选择成本最优模型 (推荐Qwen Plus)
    - ✅ 可选择性启用不同AI功能
