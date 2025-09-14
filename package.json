@@ -9,16 +9,23 @@
     "lint": "eslint",
     "test": "node test/test-api.js",
     "test:unit": "vitest",
-  "test:coverage": "vitest --coverage",
+    "test:coverage": "vitest --coverage",
     "test:ui": "vitest --ui",
     "test:xiaohongshu": "vitest src/test/parsers/xiaohongshu.test.ts",
     "postinstall": "npx playwright install chromium",
     "check:types": "tsc --noEmit"
   },
   "dependencies": {
+    "@langchain/core": "^0.3.75",
+    "@langchain/openai": "^0.6.11",
+    "cheerio": "^1.1.2",
+    "langchain": "^0.3.33",
     "next": "15.5.0",
+    "ofetch": "^1.4.1",
+    "playwright": "^1.55.0",
     "react": "19.1.0",
-    "react-dom": "19.1.0"
+    "react-dom": "19.1.0",
+    "zod": "^4.1.8"
   },
   "devDependencies": {
     "@eslint/eslintrc": "^3",

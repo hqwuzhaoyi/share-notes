@@ -30,8 +30,8 @@ export class XiaohongshuParser extends AbstractBaseParser {
       return this.parseWithOfetch(url, opts);
     }
 
-    let browser: any = null;
-    let page: any = null;
+    let browser: import('playwright').Browser | null = null;
+    let page: import('playwright').Page | null = null;
 
     try {
       // 启动浏览器，添加反检测参数

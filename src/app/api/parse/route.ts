@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { parserManager } from '@/lib/parsers';
 import { IOSFormatterImpl } from '@/lib/utils/ios-formatter';
 import { ParseRequest, ParseResult, OutputFormat } from '@/lib/types/parser';
-import { AIOptions } from '@/lib/types/ai';
+import { AIOptions, AIModel } from '@/lib/types/ai';
 
 const iosFormatter = new IOSFormatterImpl();
 
@@ -40,7 +40,7 @@ export async function POST(request: NextRequest) {
         enableSummary: ai_options?.enable_summary ?? true,
         enableTitleOptimization: ai_options?.enable_title_optimization ?? true,
         enableCategorization: ai_options?.enable_categorization ?? true,
-        model: ai_options?.model as any,
+        model: ai_options?.model as AIModel,
       };
       
       try {
