@@ -6,45 +6,45 @@ export class IOSFormatterImpl implements IOSFormatter {
     // 如果是AI增强内容，使用AI生成的数据
     const aiContent = content as AIEnhancedContent;
     const useAIContent = aiContent.aiEnhanced;
-    
+
     const displayTitle = useAIContent && aiContent.optimizedTitle ? aiContent.optimizedTitle : content.title;
     const displayContent = useAIContent && aiContent.summary ? aiContent.summary : content.content;
-    
+
     const { images, author, originalUrl } = content;
-    
+
     // 构建flomo内容
     let flomoContent = '';
-    
+
     // 标题
     if (displayTitle) {
       flomoContent += `## ${displayTitle}\n\n`;
     }
-    
+
     // 正文内容（摘要或原文）
     if (displayContent) {
       flomoContent += `${displayContent}\n\n`;
     }
-    
+
     // AI增强信息：分类和标签
     if (useAIContent && aiContent.categories && aiContent.categories.length > 0) {
       flomoContent += `🏷️ ${aiContent.categories.join(' · ')}\n`;
     }
-    
+
     if (useAIContent && aiContent.tags && aiContent.tags.length > 0) {
       flomoContent += `#${aiContent.tags.join(' #')}\n\n`;
     }
-    
+
     // 作者信息
     if (author) {
       flomoContent += `👤 ${author}\n`;
     }
-    
+
     // 原链接
     flomoContent += `🔗 ${originalUrl}\n`;
-    
+
     // 时间戳
     flomoContent += `⏰ ${new Date().toLocaleString('zh-CN')}`;
-    
+
     // AI增强标识
     if (useAIContent) {
       flomoContent += '\n✨ AI增强';
@@ -52,13 +52,18 @@ export class IOSFormatterImpl implements IOSFormatter {
 
     // 构建flomo URL scheme
     const encodedContent = encodeURIComponent(flomoContent);
-    const encodedImages = images.length > 0 ? encodeURIComponent(images.join(',')) : '';
-    
+
+    // flomo的image_urls需要JSON数组格式：["url1","url2"]
+    const validImages = IOSFormatterImpl.filterValidImages(images);
+    const encodedImages = validImages.length > 0
+      ? encodeURIComponent(JSON.stringify(validImages))
+      : '';
+
     let flomoUrl = `flomo://create?content=${encodedContent}`;
     if (encodedImages) {
       flomoUrl += `&image_urls=${encodedImages}`;
     }
-    
+
     return flomoUrl;
   }
 
@@ -66,34 +71,34 @@ export class IOSFormatterImpl implements IOSFormatter {
     // 如果是AI增强内容，使用AI生成的数据
     const aiContent = content as AIEnhancedContent;
     const useAIContent = aiContent.aiEnhanced;
-    
+
     const displayTitle = useAIContent && aiContent.optimizedTitle ? aiContent.optimizedTitle : content.title;
     const displayContent = useAIContent && aiContent.summary ? aiContent.summary : content.content;
-    
+
     const { images, author, originalUrl } = content;
-    
+
     // 构建备忘录内容
     let notesContent = '';
-    
+
     // 标题
     if (displayTitle) {
       notesContent += `${displayTitle}\n\n`;
     }
-    
+
     // 正文内容（摘要或原文）
     if (displayContent) {
       notesContent += `${displayContent}\n\n`;
     }
-    
+
     // AI增强信息
     if (useAIContent && aiContent.categories && aiContent.categories.length > 0) {
       notesContent += `分类: ${aiContent.categories.join(', ')}\n`;
     }
-    
+
     if (useAIContent && aiContent.tags && aiContent.tags.length > 0) {
       notesContent += `标签: ${aiContent.tags.join(', ')}\n\n`;
     }
-    
+
     // 图片链接（备忘录不支持直接插入图片，只能显示链接）
     if (images.length > 0) {
       notesContent += '📷 图片链接：\n';
@@ -102,18 +107,18 @@ export class IOSFormatterImpl implements IOSFormatter {
       });
       notesContent += '\n';
     }
-    
+
     // 作者信息
     if (author) {
       notesContent += `作者: ${author}\n`;
     }
-    
+
     // 原链接
     notesContent += `链接: ${originalUrl}\n`;
-    
+
     // 时间戳
     notesContent += `时间: ${new Date().toLocaleString('zh-CN')}`;
-    
+
     // AI增强标识
     if (useAIContent) {
       notesContent += '\nAI增强内容';
@@ -121,7 +126,7 @@ export class IOSFormatterImpl implements IOSFormatter {
 
     // 构建备忘录URL scheme
     const encodedContent = encodeURIComponent(notesContent);
-    
+
     return `mobilenotes://create?note=${encodedContent}`;
   }
 

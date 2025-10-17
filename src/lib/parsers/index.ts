@@ -90,7 +90,7 @@ export class ParserManager {
   ): Promise<AIEnhancedContent> {
     // 先进行常规解析
     let content: ParsedContent;
-    let rawContent = '';
+    const rawContent = '';
     
     try {
       content = await this.parse(url, options);

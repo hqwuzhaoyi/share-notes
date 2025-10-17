@@ -1,7 +1,9 @@
 import { chromium } from 'playwright';
 import * as cheerio from 'cheerio';
 import { AbstractBaseParser } from './base';
-import { ParsedContent, ParserOptions } from '../types/parser';
+import { ParsedContent, ParserOptions, FallbackInfo } from '../types/parser';
+import { isVercel, supportsPlaywrightBrowser, getEnvironmentType } from '../utils/environment-detector';
+import { ErrorHandler } from '../utils/error-handler';
 
 export class XiaohongshuParser extends AbstractBaseParser {
   platform = 'xiaohongshu' as const;
@@ -13,7 +15,7 @@ export class XiaohongshuParser extends AbstractBaseParser {
   async parse(url: string, options?: ParserOptions): Promise<ParsedContent> {
     const opts = this.mergeOptions({ 
       ...options, 
-      usePlaywright: !this.isVercelEnvironment(), // Vercel环境下不使用Playwright
+      usePlaywright: supportsPlaywrightBrowser(), // 根据环境检测决定是否使用Playwright
       timeout: 15000 // 增加超时时间
     });
 
@@ -24,14 +26,14 @@ export class XiaohongshuParser extends AbstractBaseParser {
     }
 
     // Vercel环境下，优先建议使用preloadedHtml
-    if (this.isVercelEnvironment()) {
+    if (isVercel()) {
       console.log('🌐 检测到Vercel生产环境，建议使用preloadedHtml以获得最佳效果');
-      // 仍然尝试ofetch解析，但成功率可能较低
-      return this.parseWithOfetch(url, opts);
+      // 尝试ofetch解析，如果失败则返回降级建议
+      return this.parseWithFallback(url, opts);
     }
 
-    let browser: any = null;
-    let page: any = null;
+    let browser: import('playwright').Browser | null = null;
+    let page: import('playwright').Page | null = null;
 
     try {
       // 启动浏览器，添加反检测参数
@@ -682,9 +684,87 @@ export class XiaohongshuParser extends AbstractBaseParser {
     return undefined;
   }
 
-  // 检测是否为Vercel环境
-  private isVercelEnvironment(): boolean {
-    return process.env.VERCEL === '1' || process.env.VERCEL_ENV !== undefined;
+
+  // Vercel环境下的降级解析策略
+  private async parseWithFallback(url: string, options?: ParserOptions): Promise<ParsedContent> {
+    return ErrorHandler.withRetry(
+      async () => {
+        return await this.parseWithOfetch(url, options);
+      },
+      {
+        url,
+        parser: 'xiaohongshu',
+        environment: getEnvironmentType()
+      }
+    ).catch((error) => {
+      console.warn('🌐 Vercel环境下解析失败，提供降级建议');
+      
+      // 记录错误用于监控
+      const processedError = ErrorHandler.processError(error as Error, {
+        url,
+        parser: 'xiaohongshu',
+        environment: getEnvironmentType()
+      });
+      ErrorHandler.logError(processedError);
+      
+      // 返回带有iOS Shortcuts建议的基础内容
+      return this.createFallbackContent(url, error as Error);
+    });
+  }
+
+  // 创建降级内容和iOS Shortcuts建议
+  private createFallbackContent(url: string, error: Error): ParsedContent {
+    const iosShortcutSuggestion = this.generateIOSShortcutSuggestion(url);
+    
+    return {
+      title: '⚠️ 内容解析受限 - 建议使用iOS快捷指令',
+      content: `由于Vercel Serverless环境限制，无法完全解析此小红书内容。
+
+🎯 推荐解决方案：
+1. 使用下方的iOS快捷指令获取完整内容
+2. 在快捷指令中预取HTML内容，然后调用本API
+3. 在本地环境运行此服务以获得完整功能
+
+⚠️ 错误信息：${error.message}
+
+📱 iOS快捷指令代码：
+${iosShortcutSuggestion}`,
+      images: [],
+      author: '系统提示',
+      platform: this.platform,
+      originalUrl: url,
+      publishedAt: new Date()
+    };
+  }
+
+  // 生成iOS快捷指令建议
+  private generateIOSShortcutSuggestion(url: string): string {
+    return `
+# 小红书内容解析快捷指令
+
+## 步骤1: 获取网页内容
+- 动作：获取URL内容
+- URL：${url}
+- 方法：GET
+- 请求头：
+  - User-Agent: Mozilla/5.0 (iPhone; CPU iPhone OS 17_0 like Mac OS X)
+  - Accept: text/html,application/xhtml+xml
+
+## 步骤2: 调用解析API  
+- 动作：获取URL内容
+- URL：https://your-domain.vercel.app/api/parse
+- 方法：POST
+- 请求体：JSON
+  {
+    "url": "${url}",
+    "preloadedHtml": "[步骤1的输出]",
+    "output_format": "flomo"
+  }
+
+## 步骤3: 处理结果
+- 如果成功：打开返回的iOS URL
+- 如果失败：显示错误信息
+`;
   }
 
   // Vercel环境下使用ofetch进行解析

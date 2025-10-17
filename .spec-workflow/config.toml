@@ -1,0 +1,14 @@
+# Project directory (defaults to current directory)
+# projectDir = "."
+
+# Dashboard port (1024-65535)
+port = 3456
+
+# Auto-start dashboard with MCP server
+autoStartDashboard = true
+
+# Run dashboard-only mode
+dashboardOnly = false
+
+# Interface language (en, ja, zh, es, pt, de, fr, ru, it, ko, ar)
+lang = "zh"

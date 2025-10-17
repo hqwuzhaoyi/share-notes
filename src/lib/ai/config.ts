@@ -126,6 +126,35 @@ export const getAIConfig = () => ({
   debugMode: process.env.AI_DEBUG === 'true',
 });
 
+// 获取通用配置信息
+export const getConfig = () => ({
+  ...getAIConfig(),
+  apiTimeout: parseInt(process.env.API_TIMEOUT || '30000', 10),
+  playwrightSkipDownload: process.env.PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD === '1',
+  nodeEnv: process.env.NODE_ENV || 'development',
+});
+
+// 检查是否启用AI功能
+export const isAiEnabled = (): boolean => {
+  return process.env.ENABLE_AI !== 'false';
+};
+
+// 获取API超时时间
+export const getTimeout = (): number => {
+  return parseInt(process.env.API_TIMEOUT || '30000', 10);
+};
+
+// 检查是否应该跳过Playwright下载
+export const effectivePlaywrightSkip = (): boolean => {
+  // 检查显式环境变量
+  if (process.env.PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD === '1') {
+    return true;
+  }
+  
+  // 检查是否在Vercel环境（需要延迟导入避免循环依赖）
+  return process.env.VERCEL === '1' || process.env.VERCEL_ENV !== undefined;
+};
+
 // 模型成本估算（每1K tokens的成本，美元）
 export const MODEL_COSTS = {
   'gpt-3.5-turbo': {

@@ -1,5 +1,6 @@
 import { describe, it, expect, beforeAll, afterAll, vi, beforeEach } from 'vitest';
 import { XiaohongshuParser } from '../../lib/parsers/xiaohongshu';
+import { EnvironmentDetector } from '../../lib/utils/environment-detector';
 
 describe('环境切换测试 - Vercel vs 开发环境', () => {
   let parser: XiaohongshuParser;
@@ -37,7 +38,7 @@ describe('环境切换测试 - Vercel vs 开发环境', () => {
     });
 
     it('应该正确检测 Vercel 环境', () => {
-      const isVercel = parser['isVercelEnvironment']();
+      const isVercel = EnvironmentDetector.isVercel();
       expect(isVercel).toBe(true);
       console.log('✅ Vercel环境检测正确');
     });
@@ -127,7 +128,7 @@ describe('环境切换测试 - Vercel vs 开发环境', () => {
     });
 
     it('应该正确检测开发环境', () => {
-      const isVercel = parser['isVercelEnvironment']();
+      const isVercel = EnvironmentDetector.isVercel();
       expect(isVercel).toBe(false);
       console.log('✅ 开发环境检测正确');
     });
@@ -228,19 +229,19 @@ describe('环境切换测试 - Vercel vs 开发环境', () => {
     it('应该验证环境检测函数的准确性', () => {
       // 测试 Vercel 环境检测
       process.env.VERCEL = '1';
-      expect(parser['isVercelEnvironment']()).toBe(true);
+      expect(EnvironmentDetector.isVercel()).toBe(true);
       
       process.env.VERCEL_ENV = 'production';
-      expect(parser['isVercelEnvironment']()).toBe(true);
+      expect(EnvironmentDetector.isVercel()).toBe(true);
       
       // 测试开发环境检测
       delete process.env.VERCEL;
       delete process.env.VERCEL_ENV;
-      expect(parser['isVercelEnvironment']()).toBe(false);
+      expect(EnvironmentDetector.isVercel()).toBe(false);
       
       // 边界情况
       process.env.VERCEL = '';
-      expect(parser['isVercelEnvironment']()).toBe(false);
+      expect(EnvironmentDetector.isVercel()).toBe(false);
       
       console.log('✅ 环境检测函数验证通过');
     });
