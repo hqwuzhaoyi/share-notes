@@ -1,0 +1,93 @@
+{
+  "name": "小红书→flomo",
+  "description": "从剪贴板获取小红书链接，解析内容后发送到flomo",
+  "icon": {
+    "glyph": "doc.text",
+    "color": "red"
+  },
+  "actions": [
+    {
+      "step": 1,
+      "type": "GetClipboard",
+      "description": "获取剪贴板内容"
+    },
+    {
+      "step": 2,
+      "type": "GetURLsFromInput",
+      "description": "从剪贴板提取URL",
+      "input": "剪贴板"
+    },
+    {
+      "step": 3,
+      "type": "GetContentsOfURL",
+      "description": "获取网页HTML内容（iOS端获取，绕过反爬虫）",
+      "config": {
+        "url": "URL",
+        "method": "GET",
+        "headers": {
+          "User-Agent": "Mozilla/5.0 (iPhone; CPU iPhone OS 17_0 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.0 Mobile/15E148 Safari/604.1",
+          "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
+          "Accept-Language": "zh-CN,zh;q=0.9,en;q=0.8",
+          "Accept-Encoding": "gzip, deflate, br"
+        }
+      }
+    },
+    {
+      "step": 4,
+      "type": "GetContentsOfURL",
+      "description": "调用解析API",
+      "config": {
+        "url": "https://your-domain.vercel.app/api/parse",
+        "method": "POST",
+        "headers": {
+          "Content-Type": "application/json"
+        },
+        "requestBody": {
+          "type": "JSON",
+          "json": {
+            "url": "${URL}",
+            "output_format": "flomo",
+            "options": {
+              "preloadedHtml": "${URL的内容}"
+            }
+          }
+        }
+      },
+      "note": "请将 your-domain.vercel.app 替换为你的实际域名"
+    },
+    {
+      "step": 5,
+      "type": "GetDictionaryValue",
+      "description": "提取ios_url字段",
+      "config": {
+        "key": "ios_url",
+        "dictionary": "URL的内容"
+      }
+    },
+    {
+      "step": 6,
+      "type": "OpenURL",
+      "description": "打开flomo创建笔记",
+      "config": {
+        "url": "字典值"
+      }
+    }
+  ],
+  "sharing": {
+    "showInShareSheet": true,
+    "acceptedTypes": ["URL", "Text"]
+  },
+  "variables": {
+    "剪贴板": "步骤1的输出",
+    "URL": "步骤2的输出",
+    "URL的内容_HTML": "步骤3的输出（HTML内容）",
+    "URL的内容_JSON": "步骤4的输出（API响应）",
+    "字典值": "步骤5的输出（ios_url）"
+  },
+  "notes": [
+    "这个快捷指令使用iOS端获取HTML，然后发送到服务器解析",
+    "优势：绕过服务器反爬虫限制，速度快，成功率高",
+    "使用方法1：复制小红书链接 → 运行快捷指令",
+    "使用方法2：在小红书分享菜单中选择此快捷指令"
+  ]
+}

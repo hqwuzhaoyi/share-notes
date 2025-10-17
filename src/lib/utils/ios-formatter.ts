@@ -52,13 +52,17 @@ export class IOSFormatterImpl implements IOSFormatter {
 
     // 构建flomo URL scheme
     const encodedContent = encodeURIComponent(flomoContent);
-    const encodedImages = images.length > 0 ? encodeURIComponent(images.join(',')) : '';
-    
+
+    // flomo的image_urls需要JSON数组格式：["url1","url2"]
+    const encodedImages = images.length > 0
+      ? encodeURIComponent(JSON.stringify(images))
+      : '';
+
     let flomoUrl = `flomo://create?content=${encodedContent}`;
     if (encodedImages) {
       flomoUrl += `&image_urls=${encodedImages}`;
     }
-    
+
     return flomoUrl;
   }
 

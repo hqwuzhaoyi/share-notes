@@ -3,6 +3,8 @@ import { parserManager } from '@/lib/parsers';
 import { IOSFormatterImpl } from '@/lib/utils/ios-formatter';
 import { ParseRequest, ParseResult, OutputFormat } from '@/lib/types/parser';
 import { AIOptions, AIModel } from '@/lib/types/ai';
+import { ErrorHandler } from '@/lib/utils/error-handler';
+import { getEnvironmentType } from '@/lib/utils/environment-detector';
 
 const iosFormatter = new IOSFormatterImpl();
 
@@ -31,34 +33,42 @@ export async function POST(request: NextRequest) {
       } as ParseResult, { status: 400 });
     }
 
-    // 解析内容 - 支持AI增强
-    let parsedContent;
-    
-    if (ai_enhance && parserManager.isAIAvailable()) {
-      // 构建AI选项
-      const aiOpts: AIOptions = {
-        enableSummary: ai_options?.enable_summary ?? true,
-        enableTitleOptimization: ai_options?.enable_title_optimization ?? true,
-        enableCategorization: ai_options?.enable_categorization ?? true,
-        model: ai_options?.model as AIModel,
-      };
-      
-      try {
-        // 尝试智能解析（可能包含AI增强）
-        parsedContent = await parserManager.smartParse(url, options);
-        
-        // 如果智能解析没有使用AI，手动增强
-        if (!('aiEnhanced' in parsedContent) || !parsedContent.aiEnhanced) {
-          parsedContent = await parserManager.parseWithAI(url, options, aiOpts);
+    // 使用增强的错误处理进行解析
+    const parsedContent = await ErrorHandler.withRetry(
+      async () => {
+        if (ai_enhance && parserManager.isAIAvailable()) {
+          // 构建AI选项
+          const aiOpts: AIOptions = {
+            enableSummary: ai_options?.enable_summary ?? true,
+            enableTitleOptimization: ai_options?.enable_title_optimization ?? true,
+            enableCategorization: ai_options?.enable_categorization ?? true,
+            model: ai_options?.model as AIModel,
+          };
+          
+          try {
+            // 尝试智能解析（可能包含AI增强）
+            const smartResult = await parserManager.smartParse(url, options);
+            
+            // 如果智能解析没有使用AI，手动增强
+            if (!('aiEnhanced' in smartResult) || !smartResult.aiEnhanced) {
+              return await parserManager.parseWithAI(url, options, aiOpts);
+            }
+            return smartResult;
+          } catch (aiError) {
+            console.warn('AI parsing failed, falling back to traditional parsing:', aiError);
+            return await parserManager.parse(url, options);
+          }
+        } else {
+          // 传统解析
+          return await parserManager.parse(url, options);
         }
-      } catch (aiError) {
-        console.warn('AI parsing failed, falling back to traditional parsing:', aiError);
-        parsedContent = await parserManager.parse(url, options);
+      },
+      {
+        url,
+        parser: 'api-endpoint',
+        environment: getEnvironmentType()
       }
-    } else {
-      // 传统解析
-      parsedContent = await parserManager.parse(url, options);
-    }
+    );
 
     // 格式化输出
     let ios_url: string | undefined;
@@ -85,11 +95,21 @@ export async function POST(request: NextRequest) {
     });
 
   } catch (error) {
-    console.error('Parse API Error:', error);
+    // 使用统一错误处理
+    const processedError = ErrorHandler.processError(error as Error, {
+      url: (await request.json().catch(() => ({})))?.url,
+      parser: 'api-endpoint',
+      environment: getEnvironmentType()
+    });
+    
+    // 记录错误用于监控
+    ErrorHandler.logError(processedError);
+    
+    console.error('Parse API Error:', processedError.userMessage);
 
     const result: ParseResult = {
       success: false,
-      error: error instanceof Error ? error.message : 'Unknown parsing error',
+      error: processedError.userMessage,
       parsed_at: new Date()
     };
 

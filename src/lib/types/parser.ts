@@ -16,6 +16,14 @@ export interface ParseResult {
   error?: string;
   ios_url?: string;
   parsed_at: Date;
+  fallback?: FallbackInfo;
+}
+
+export interface FallbackInfo {
+  reason: string;
+  strategy: 'preloadedHtml' | 'ofetch' | 'manual';
+  iosShortcutSuggestion?: string;
+  environment: string;
 }
 
 export interface ParserOptions {
