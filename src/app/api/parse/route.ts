@@ -42,21 +42,25 @@ export async function POST(request: NextRequest) {
             enableSummary: ai_options?.enable_summary ?? true,
             enableTitleOptimization: ai_options?.enable_title_optimization ?? true,
             enableCategorization: ai_options?.enable_categorization ?? true,
-            model: ai_options?.model as AIModel,
+            model: typeof ai_options?.model === 'string' ? ai_options.model as AIModel : undefined,
           };
-          
+
           try {
             // 尝试智能解析（可能包含AI增强）
             const smartResult = await parserManager.smartParse(url, options);
-            
+
             // 如果智能解析没有使用AI，手动增强
-            if (!('aiEnhanced' in smartResult) || !smartResult.aiEnhanced) {
+            if (!smartResult || !('aiEnhanced' in smartResult) || !smartResult.aiEnhanced) {
               return await parserManager.parseWithAI(url, options, aiOpts);
             }
             return smartResult;
           } catch (aiError) {
             console.warn('AI parsing failed, falling back to traditional parsing:', aiError);
-            return await parserManager.parse(url, options);
+            try {
+              return await parserManager.parse(url, options);
+            } catch (fallbackError) {
+              throw fallbackError;
+            }
           }
         } else {
           // 传统解析
@@ -101,10 +105,10 @@ export async function POST(request: NextRequest) {
       parser: 'api-endpoint',
       environment: getEnvironmentType()
     });
-    
+
     // 记录错误用于监控
     ErrorHandler.logError(processedError);
-    
+
     console.error('Parse API Error:', processedError.userMessage);
 
     const result: ParseResult = {
@@ -113,7 +117,7 @@ export async function POST(request: NextRequest) {
       parsed_at: new Date()
     };
 
-    return NextResponse.json(result, { 
+    return NextResponse.json(result, {
       status: 500,
       headers: {
         'Content-Type': 'application/json',

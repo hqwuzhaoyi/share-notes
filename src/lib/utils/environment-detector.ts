@@ -10,6 +10,7 @@ export class EnvironmentDetector {
    * 检测是否在 Vercel 环境中运行
    */
   static isVercel(): boolean {
+    if (typeof process === 'undefined' || !process.env) return false;
     return process.env.VERCEL === '1' || process.env.VERCEL_ENV !== undefined;
   }
 
@@ -17,6 +18,7 @@ export class EnvironmentDetector {
    * 检测是否在 Netlify 环境中运行
    */
   static isNetlify(): boolean {
+    if (typeof process === 'undefined' || !process.env) return false;
     return process.env.NETLIFY === 'true' || process.env.NETLIFY_DEV === 'true';
   }
 
@@ -24,7 +26,8 @@ export class EnvironmentDetector {
    * 检测是否在 Serverless 环境中运行
    */
   static isServerless(): boolean {
-    return this.isVercel() || this.isNetlify() || 
+    if (typeof process === 'undefined' || !process.env) return false;
+    return this.isVercel() || this.isNetlify() ||
            process.env.AWS_LAMBDA_FUNCTION_NAME !== undefined ||
            process.env.FUNCTIONS_RUNTIME !== undefined;
   }
@@ -33,6 +36,7 @@ export class EnvironmentDetector {
    * 检测是否在本地开发环境中运行
    */
   static isLocal(): boolean {
+    if (typeof process === 'undefined' || !process.env) return false;
     return process.env.NODE_ENV === 'development' && !this.isServerless();
   }
 
@@ -52,7 +56,7 @@ export class EnvironmentDetector {
    */
   static shouldSkipPlaywrightDownload(): boolean {
     // 检查显式环境变量
-    if (process.env.PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD === '1') {
+    if (typeof process !== 'undefined' && process.env && process.env.PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD === '1') {
       return true;
     }
 
@@ -66,10 +70,10 @@ export class EnvironmentDetector {
   static supportsPlaywrightBrowser(): boolean {
     // Vercel Serverless 环境不支持 Playwright 浏览器
     if (this.isVercel()) return false;
-    
+
     // 其他 Serverless 环境通常也不支持
     if (this.isServerless()) return false;
-    
+
     // 本地环境支持
     return true;
   }
@@ -86,14 +90,14 @@ export class EnvironmentDetector {
       isLocal: this.isLocal(),
       shouldSkipPlaywrightDownload: this.shouldSkipPlaywrightDownload(),
       supportsPlaywrightBrowser: this.supportsPlaywrightBrowser(),
-      nodeEnv: process.env.NODE_ENV,
-      relevantEnvVars: {
+      nodeEnv: typeof process !== 'undefined' && process.env ? process.env.NODE_ENV : undefined,
+      relevantEnvVars: typeof process !== 'undefined' && process.env ? {
         VERCEL: process.env.VERCEL,
         VERCEL_ENV: process.env.VERCEL_ENV,
         NETLIFY: process.env.NETLIFY,
         NODE_ENV: process.env.NODE_ENV,
         PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD: process.env.PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD,
-      }
+      } : {},
     };
   }
 }

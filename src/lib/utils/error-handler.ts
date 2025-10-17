@@ -5,11 +5,11 @@
 
 import { getEnvironmentType } from './environment-detector';
 
-export type ErrorCategory = 
-  | 'network' 
-  | 'parsing' 
-  | 'timeout' 
-  | 'authentication' 
+export type ErrorCategory =
+  | 'network'
+  | 'parsing'
+  | 'timeout'
+  | 'authentication'
   | 'ratelimit'
   | 'serverless'
   | 'unknown';
@@ -32,7 +32,19 @@ export interface ProcessedError {
 }
 
 export class ErrorHandler {
-  private static readonly RETRY_DELAYS = [1000, 2000, 4000]; // 指数退避：1s, 2s, 4s
+  // 更合理的指数退避：1s, 2s, 4s, 8s
+  private static readonly RETRY_DELAYS = [1000, 2000, 4000, 8000];
+
+  /**
+   * 获取重试延迟时间（带随机抖动，防止请求风暴）
+   */
+  private static getRetryDelay(attempt: number): number {
+    const index = Math.min(attempt - 1, this.RETRY_DELAYS.length - 1);
+    const baseDelay = this.RETRY_DELAYS[index];
+    // 添加最多±20%的抖动
+    const jitter = Math.floor(baseDelay * 0.2 * (Math.random() - 0.5));
+    return baseDelay + jitter;
+  }
   private static readonly MAX_ATTEMPTS = 3;
 
   /**
@@ -67,8 +79,8 @@ export class ErrorHandler {
     const message = error.message.toLowerCase();
 
     // 网络相关错误
-    if (message.includes('fetch') || 
-        message.includes('network') || 
+    if (message.includes('fetch') ||
+        message.includes('network') ||
         message.includes('connection') ||
         message.includes('econnreset') ||
         message.includes('enotfound')) {
@@ -76,7 +88,7 @@ export class ErrorHandler {
     }
 
     // 超时错误
-    if (message.includes('timeout') || 
+    if (message.includes('timeout') ||
         message.includes('时间') ||
         message.includes('超时')) {
       return 'timeout';
@@ -106,7 +118,7 @@ export class ErrorHandler {
     }
 
     // 解析错误
-    if (message.includes('parse') || 
+    if (message.includes('parse') ||
         message.includes('解析') ||
         message.includes('invalid') ||
         message.includes('无效')) {
@@ -127,7 +139,7 @@ export class ErrorHandler {
     // 这些错误类型值得重试
     const retryableCategories: ErrorCategory[] = [
       'network',
-      'timeout', 
+      'timeout',
       'ratelimit',
       'unknown'
     ];
@@ -147,8 +159,8 @@ export class ErrorHandler {
    * 生成用户友好的错误信息
    */
   private static getUserFriendlyMessage(
-    category: ErrorCategory, 
-    originalMessage: string, 
+    category: ErrorCategory,
+    originalMessage: string,
     context: ErrorContext
   ): string {
     const { environment, parser, url } = context;
@@ -203,13 +215,13 @@ export class ErrorHandler {
     context: Partial<ErrorContext> = {}
   ): Promise<T> {
     let lastError: Error;
-    
+
     for (let attempt = 1; attempt <= this.MAX_ATTEMPTS; attempt++) {
       try {
         return await operation();
       } catch (error) {
         lastError = error as Error;
-        
+
         const processedError = this.processError(lastError, {
           ...context,
           attempt,

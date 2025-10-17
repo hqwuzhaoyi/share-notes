@@ -5,6 +5,11 @@
  * 验证关键API endpoint响应正常，包括Vercel环境特定的功能
  */
 
+// Node.js 18+ has global fetch, otherwise use node-fetch
+if (typeof fetch === 'undefined') {
+  global.fetch = (...args) => import('node-fetch').then(({default: fetch}) => fetch(...args));
+}
+
 const API_BASE = process.env.API_BASE || 'http://localhost:3000';
 
 console.log('🚀 开始 Vercel 部署烟雾测试...');
@@ -71,10 +76,10 @@ const TEST_CASES = [
 async function runTest(testCase) {
   console.log(`\n🧪 ${testCase.name}`);
   console.log(`📝 ${testCase.description}`);
-  
+
   try {
     const startTime = Date.now();
-    
+
     const requestOptions = {
       method: testCase.method,
       headers: {
@@ -82,33 +87,33 @@ async function runTest(testCase) {
         'User-Agent': 'Deployment-Smoke-Test/1.0'
       }
     };
-    
+
     if (testCase.body) {
       requestOptions.body = JSON.stringify(testCase.body);
     }
-    
+
     const response = await fetch(`${API_BASE}${testCase.path}`, requestOptions);
     const responseTime = Date.now() - startTime;
-    
+
     // 检查状态码
-    const expectedStatuses = Array.isArray(testCase.expectedStatus) 
-      ? testCase.expectedStatus 
+    const expectedStatuses = Array.isArray(testCase.expectedStatus)
+      ? testCase.expectedStatus
       : [testCase.expectedStatus];
-    
+
     if (!expectedStatuses.includes(response.status)) {
       throw new Error(`Expected status ${testCase.expectedStatus}, got ${response.status}`);
     }
-    
+
     // 检查响应内容
     const responseText = await response.text();
     let responseData;
-    
+
     try {
       responseData = JSON.parse(responseText);
     } catch {
       responseData = { raw: responseText };
     }
-    
+
     // 验证Cache-Control headers
     const cacheControl = response.headers.get('cache-control');
     if (response.status === 200 && testCase.method === 'POST') {
@@ -118,16 +123,16 @@ async function runTest(testCase) {
         console.log(`📦 Cache-Control: ${cacheControl}`);
       }
     }
-    
+
     // 验证CORS headers
     const corsOrigin = response.headers.get('access-control-allow-origin');
     if (corsOrigin) {
       console.log(`🌐 CORS: ${corsOrigin}`);
     }
-    
+
     console.log(`✅ 状态码: ${response.status}`);
     console.log(`⏱️ 响应时间: ${responseTime}ms`);
-    
+
     // 特定测试验证
     if (testCase.name.includes('preloadedHtml')) {
       if (responseData.success && responseData.data) {
@@ -138,7 +143,7 @@ async function runTest(testCase) {
         }
       }
     }
-    
+
     if (testCase.name.includes('错误处理')) {
       if (responseData.error) {
         console.log(`🚨 错误信息: ${responseData.error.substring(0, 100)}...`);
@@ -147,14 +152,14 @@ async function runTest(testCase) {
         }
       }
     }
-    
+
     return {
       success: true,
       status: response.status,
       responseTime,
       data: responseData
     };
-    
+
   } catch (error) {
     console.log(`❌ 测试失败: ${error.message}`);
     return {
@@ -167,10 +172,10 @@ async function runTest(testCase) {
 // 验证环境
 function validateEnvironment() {
   console.log('\n🔍 环境验证...');
-  
+
   const isVercelDeploy = API_BASE.includes('vercel.app');
   const isLocalTest = API_BASE.includes('localhost');
-  
+
   if (isVercelDeploy) {
     console.log('🌐 检测到Vercel部署环境');
     console.log('   - 预期使用ofetch解析');
@@ -189,30 +194,30 @@ function validateEnvironment() {
 function generateReport(results) {
   console.log('\n📊 测试报告');
   console.log('='.repeat(50));
-  
+
   const totalTests = results.length;
   const passedTests = results.filter(r => r.success).length;
   const failedTests = totalTests - passedTests;
-  
+
   console.log(`📈 总测试数: ${totalTests}`);
   console.log(`✅ 通过: ${passedTests}`);
   console.log(`❌ 失败: ${failedTests}`);
   console.log(`📊 通过率: ${((passedTests / totalTests) * 100).toFixed(1)}%`);
-  
+
   if (results.length > 0) {
     const avgResponseTime = results
       .filter(r => r.responseTime)
       .reduce((sum, r) => sum + r.responseTime, 0) / results.filter(r => r.responseTime).length;
     console.log(`⏱️ 平均响应时间: ${avgResponseTime.toFixed(0)}ms`);
   }
-  
+
   console.log('\n🎯 关键指标:');
   results.forEach((result, index) => {
     const testCase = TEST_CASES[index];
     const status = result.success ? '✅' : '❌';
     console.log(`   ${status} ${testCase.name}`);
   });
-  
+
   // 部署建议
   console.log('\n💡 部署建议:');
   if (passedTests === totalTests) {
@@ -222,7 +227,7 @@ function generateReport(results) {
   } else {
     console.log('🚨 多个测试失败，不建议部署到生产环境');
   }
-  
+
   return {
     total: totalTests,
     passed: passedTests,
@@ -234,18 +239,18 @@ function generateReport(results) {
 // 主函数
 async function main() {
   validateEnvironment();
-  
+
   const results = [];
-  
+
   // 运行所有测试
   for (const testCase of TEST_CASES) {
     const result = await runTest(testCase);
     results.push(result);
   }
-  
+
   // 生成报告
   const report = generateReport(results);
-  
+
   // 设置退出码
   process.exit(report.failed > 0 ? 1 : 0);
 }
