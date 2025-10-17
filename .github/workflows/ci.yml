@@ -13,26 +13,31 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 9
+
       - name: Setup Node
         uses: actions/setup-node@v4
         with:
           node-version: 18
-          cache: 'npm'
+          cache: 'pnpm'
 
       - name: Install dependencies
-        run: npm ci
+        run: pnpm install --frozen-lockfile
 
       - name: Type check
-        run: npm run check:types
+        run: pnpm run check:types
 
       - name: Lint
-        run: npm run lint || echo "Lint step failed; continuing"
+        run: pnpm run lint || echo "Lint step failed; continuing"
 
       - name: Unit tests (vitest)
-        run: npm run test:unit -- --run
+        run: pnpm run test:unit -- --run
 
       - name: Coverage (vitest)
-        run: npm run test:coverage -- --run
+        run: pnpm run test:coverage -- --run
 
       - name: Upload coverage artifact
         uses: actions/upload-artifact@v4
@@ -42,7 +47,7 @@ jobs:
           if-no-files-found: warn
 
       - name: Security audit (non-blocking)
-        run: npm audit --audit-level=high || echo "Audit found issues"
+        run: pnpm audit --audit-level=high || echo "Audit found issues"
 
       - name: API test script
-        run: npm test || echo "API test script non-blocking"
+        run: pnpm test || echo "API test script non-blocking"
