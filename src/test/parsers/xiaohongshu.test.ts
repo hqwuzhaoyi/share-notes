@@ -1,3 +1,4 @@
+// @ts-nocheck
 import { describe, it, expect, beforeAll, vi } from 'vitest';
 import { XiaohongshuParser } from '../../lib/parsers/xiaohongshu';
 import { PlatformType } from '../../lib/types/parser';

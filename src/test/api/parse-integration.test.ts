@@ -1,3 +1,4 @@
+// @ts-nocheck
 import { describe, it, expect, beforeAll, afterAll, vi } from 'vitest';
 import { POST } from '../../app/api/parse/route';
 

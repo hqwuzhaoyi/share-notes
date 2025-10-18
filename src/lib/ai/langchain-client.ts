@@ -192,7 +192,7 @@ export class LangChainClient {
       }
 
       // 使用结构化输出解析器
-      const outputParser = StructuredOutputParser.fromZodSchema(CategorizationSchema);
+      const outputParser = StructuredOutputParser.fromZodSchema(CategorizationSchema as any);
       const formatInstructions = outputParser.getFormatInstructions();
 
       // 创建修复解析器
@@ -235,7 +235,7 @@ export class LangChainClient {
 
       return {
         success: true,
-        data: result,
+        data: result as { contentType: string; categories: string[]; tags: string[] },
         model,
       };
 

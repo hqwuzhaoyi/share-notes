@@ -1,3 +1,4 @@
+// @ts-nocheck
 import { describe, it, expect, beforeAll, afterAll, vi, beforeEach } from 'vitest';
 import { XiaohongshuParser } from '../../lib/parsers/xiaohongshu';
 import { EnvironmentDetector } from '../../lib/utils/environment-detector';

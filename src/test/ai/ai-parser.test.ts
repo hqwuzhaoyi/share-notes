@@ -65,10 +65,10 @@ describe('🤖 AI功能测试 - 有AI vs 无AI对比', () => {
       try {
         // AI增强解析
         const aiResult = await aiParser.enhance(mockParsedContent, {
-          enable_summary: true,
-          enable_title_optimization: true,
-          enable_categorization: true,
-          model: process.env.LLM_MODEL || 'qwen-plus'
+          enableSummary: true,
+          enableTitleOptimization: true,
+          enableCategorization: true,
+          model: (process.env.LLM_MODEL || 'qwen-plus') as any
         });
 
         // 基础结构验证
@@ -78,17 +78,17 @@ describe('🤖 AI功能测试 - 有AI vs 无AI对比', () => {
 
         // AI增强字段验证
         if ('summary' in aiResult) {
-          expect(aiResult.summary).toBeDefined();
-          expect(aiResult.summary.length).toBeGreaterThan(10);
-          expect(aiResult.summary.length).toBeLessThan(200); // 摘要应该简洁
-          console.log('📝 AI摘要:', aiResult.summary);
+          expect(aiResult.summary!).toBeDefined();
+          expect(aiResult.summary!.length).toBeGreaterThan(10);
+          expect(aiResult.summary!.length).toBeLessThan(200); // 摘要应该简洁
+          console.log('📝 AI摘要:', aiResult.summary!);
         }
 
         if ('optimizedTitle' in aiResult) {
-          expect(aiResult.optimizedTitle).toBeDefined();
-          expect(aiResult.optimizedTitle.length).toBeGreaterThan(0);
-          expect(aiResult.optimizedTitle.length).toBeLessThan(100);
-          console.log('✨ AI优化标题:', aiResult.optimizedTitle);
+          expect(aiResult.optimizedTitle!).toBeDefined();
+          expect(aiResult.optimizedTitle!.length).toBeGreaterThan(0);
+          expect(aiResult.optimizedTitle!.length).toBeLessThan(100);
+          console.log('✨ AI优化标题:', aiResult.optimizedTitle!);
         }
 
         if ('categories' in aiResult && aiResult.categories) {
@@ -152,15 +152,15 @@ describe('🤖 AI功能测试 - 有AI vs 无AI对比', () => {
       for (const model of testModels) {
         try {
           const result = await aiParser.enhance(mockParsedContent, {
-            enable_summary: true,
-            model: model
+            enableSummary: true,
+            model: model as any
           });
 
           results[model] = result;
           console.log(`🤖 ${model} 增强完成`);
           
           if ('summary' in result) {
-            console.log(`📝 ${model} 摘要长度:`, result.summary.length);
+            console.log(`📝 ${model} 摘要长度:`, result.summary!.length);
           }
 
         } catch (error: unknown) {
@@ -200,16 +200,16 @@ describe('🤖 AI功能测试 - 有AI vs 无AI对比', () => {
 
       try {
         const result = await aiParser.enhance(mockParsedContent, {
-          enable_summary: true,
-          enable_title_optimization: false,
-          enable_categorization: false,
+          enableSummary: true,
+          enableTitleOptimization: false,
+          enableCategorization: false,
         });
 
         if ('summary' in result) {
-          expect(result.summary).toBeDefined();
-          expect(result.summary.length).toBeGreaterThan(10);
-          expect(result.summary.length).toBeLessThan(mockParsedContent.content.length);
-          console.log('📝 AI摘要质量验证通过:', result.summary.substring(0, 50) + '...');
+          expect(result.summary!).toBeDefined();
+          expect(result.summary!.length).toBeGreaterThan(10);
+          expect(result.summary!.length).toBeLessThan(mockParsedContent.content.length);
+          console.log('📝 AI摘要质量验证通过:', result.summary!.substring(0, 50) + '...');
         }
 
       } catch (error: unknown) {
@@ -225,16 +225,16 @@ describe('🤖 AI功能测试 - 有AI vs 无AI对比', () => {
 
       try {
         const result = await aiParser.enhance(mockParsedContent, {
-          enable_summary: false,
-          enable_title_optimization: true,
-          enable_categorization: false,
+          enableSummary: false,
+          enableTitleOptimization: true,
+          enableCategorization: false,
         });
 
         if ('optimizedTitle' in result) {
-          expect(result.optimizedTitle).toBeDefined();
-          expect(result.optimizedTitle.length).toBeGreaterThan(0);
-          expect(result.optimizedTitle).not.toBe(mockParsedContent.title); // 应该有所不同
-          console.log('✨ AI标题优化验证通过:', result.optimizedTitle);
+          expect(result.optimizedTitle!).toBeDefined();
+          expect(result.optimizedTitle!.length).toBeGreaterThan(0);
+          expect(result.optimizedTitle!).not.toBe(mockParsedContent.title); // 应该有所不同
+          console.log('✨ AI标题优化验证通过:', result.optimizedTitle!);
         }
 
       } catch (error: unknown) {
@@ -250,9 +250,9 @@ describe('🤖 AI功能测试 - 有AI vs 无AI对比', () => {
 
       try {
         const result = await aiParser.enhance(mockParsedContent, {
-          enable_summary: false,
-          enable_title_optimization: false,
-          enable_categorization: true,
+          enableSummary: false,
+          enableTitleOptimization: false,
+          enableCategorization: true,
         });
 
         if ('categories' in result && result.categories) {
@@ -285,7 +285,7 @@ describe('🤖 AI功能测试 - 有AI vs 无AI对比', () => {
         
         // 第一次调用 (可能调用API)
         const result1 = await aiParser.enhance(mockParsedContent, {
-          enable_summary: true,
+          enableSummary: true,
         });
         
         const firstCallTime = Date.now() - startTime;
@@ -293,7 +293,7 @@ describe('🤖 AI功能测试 - 有AI vs 无AI对比', () => {
         // 第二次调用相同内容 (应该使用缓存)
         const startTime2 = Date.now();
         const result2 = await aiParser.enhance(mockParsedContent, {
-          enable_summary: true,
+          enableSummary: true,
         });
         const secondCallTime = Date.now() - startTime2;
         
@@ -330,8 +330,8 @@ describe('🤖 AI功能测试 - 有AI vs 无AI对比', () => {
 
       try {
         const result = await aiParser.enhance(shortContent, {
-          enable_summary: true,
-          enable_title_optimization: true,
+          enableSummary: true,
+          enableTitleOptimization: true,
         });
 
         // 对于短内容，AI应该能够优雅处理
@@ -341,7 +341,7 @@ describe('🤖 AI功能测试 - 有AI vs 无AI对比', () => {
         console.log('📏 AI短内容处理验证通过');
         
         if ('summary' in result) {
-          console.log('📝 短内容摘要:', result.summary);
+          console.log('📝 短内容摘要:', result.summary!);
         }
 
       } catch (error: unknown) {
@@ -362,7 +362,7 @@ describe('🤖 AI功能测试 - 有AI vs 无AI对比', () => {
 
       try {
         const result = await aiParser.enhance(mockParsedContent, {
-          enable_summary: true,
+          enableSummary: true,
         });
 
         // 应该回退到原始内容
@@ -392,7 +392,7 @@ describe('🤖 AI功能测试 - 有AI vs 无AI对比', () => {
       try {
         // 测试无效模型名
         const result = await aiParser.enhance(mockParsedContent, {
-          enable_summary: true,
+          enableSummary: true,
           model: 'invalid-model-name' as any
         });
 
