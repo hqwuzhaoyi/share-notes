@@ -147,7 +147,34 @@ export class IOSFormatterImpl implements IOSFormatter {
     try {
       const urlObj = new URL(url);
       const pathname = urlObj.pathname.toLowerCase();
-      return /\.(jpg|jpeg|png|gif|webp|svg)$/.test(pathname);
+      const fullUrl = url.toLowerCase();
+
+      // 1. 检查路径后缀名（传统方式）
+      if (/\.(jpg|jpeg|png|gif|webp|svg)(\?.*)?$/i.test(pathname)) {
+        return true;
+      }
+
+      // 2. 检查查询参数中的格式声明（如 ?format=jpg, /format/jpg）
+      if (/[?&/]format[=/](jpg|jpeg|png|gif|webp|svg)/i.test(fullUrl)) {
+        return true;
+      }
+
+      // 3. 已知图片CDN域名白名单（小红书、B站等）
+      const imageCdnDomains = [
+        'xhscdn.com',
+        'hdslb.com',
+        'biliimg.com',
+        'sinaimg.cn',
+        'qpic.cn',
+        'alicdn.com',
+        'xiaohongshu.com'
+      ];
+
+      if (imageCdnDomains.some(domain => urlObj.hostname.includes(domain))) {
+        return true;
+      }
+
+      return false;
     } catch {
       return false;
     }
