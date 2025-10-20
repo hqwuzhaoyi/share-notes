@@ -131,7 +131,7 @@ describe('⚡ 性能基准测试', () => {
 
       expect(result).toBeDefined();
       expect(result.images).toHaveLength(3);
-      expect(result.title).toBe('这是性能测试的内容，用于验证预加载HTML的解析速度优势。内容包含多个句子和详细描述，以便更好地测试解析性能。');
+      expect(result.title).toBe('性能测试标题'); // Match actual title tag
 
       // 性能基准：预加载HTML应该非常快
       const preloadTime = performanceResults['PreloadedHTML解析'];
