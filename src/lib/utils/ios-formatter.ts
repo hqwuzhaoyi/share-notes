@@ -143,11 +143,24 @@ export class IOSFormatterImpl implements IOSFormatter {
   }
 
   // 辅助方法：验证图片URL
+  // 只验证URL格式正确性，不猜测内容类型
+  // 让调用者（flomo/Notes）决定URL是否有效
   static isValidImageUrl(url: string): boolean {
     try {
       const urlObj = new URL(url);
+
+      // 只接受 http/https 协议
+      if (urlObj.protocol !== 'http:' && urlObj.protocol !== 'https:') {
+        return false;
+      }
+
+      // 排除明显的非图片资源
       const pathname = urlObj.pathname.toLowerCase();
-      return /\.(jpg|jpeg|png|gif|webp|svg)$/.test(pathname);
+      if (/\.(js|css|json|xml|txt|html|php|asp)$/i.test(pathname)) {
+        return false;
+      }
+
+      return true;
     } catch {
       return false;
     }
