@@ -155,7 +155,7 @@ export class ErrorHandler {
     originalMessage: string,
     context: ErrorContext
   ): string {
-    const { environment, parser, url } = context;
+    const { environment, parser, url: _url } = context;
 
     switch (category) {
       case 'network':

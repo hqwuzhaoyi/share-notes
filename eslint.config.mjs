@@ -18,6 +18,10 @@ const eslintConfig = [
       "out/**",
       "build/**",
       "next-env.d.ts",
+      "src/test/**",
+      "test/**",
+      "scripts/**",
+      "vitest.config.ts",
     ],
   },
   // Project overrides: keep linting on, but avoid blocking builds on common patterns

@@ -7,7 +7,7 @@ export class PlaywrightParser extends AbstractBaseParser {
   platform: PlatformType = 'unknown';
   private browser: Browser | null = null;
 
-  canParse(url: string): boolean {
+  canParse(_url: string): boolean {
     // Playwright解析器可以处理任何URL
     return true;
   }

@@ -6,7 +6,7 @@ import { ParsedContent, ParserOptions, PlatformType } from '../types/parser';
 export class OfetchParser extends AbstractBaseParser {
   platform: PlatformType = 'unknown';
 
-  canParse(url: string): boolean {
+  canParse(_url: string): boolean {
     // ofetch解析器可以作为通用解析器
     return true;
   }
