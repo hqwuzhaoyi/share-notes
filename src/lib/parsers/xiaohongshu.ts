@@ -1,7 +1,7 @@
 import { chromium } from 'playwright';
 import * as cheerio from 'cheerio';
 import { AbstractBaseParser } from './base';
-import { ParsedContent, ParserOptions, FallbackInfo } from '../types/parser';
+import { ParsedContent, ParserOptions } from '../types/parser';
 import { isVercel, supportsPlaywrightBrowser, getEnvironmentType } from '../utils/environment-detector';
 import { ErrorHandler } from '../utils/error-handler';
 

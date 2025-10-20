@@ -1,7 +1,7 @@
 // AI增强解析器
 import { AbstractBaseParser } from './base';
 import { ParsedContent, ParserOptions } from '../types/parser';
-import { AIEnhancedContent, AIOptions, AITaskResult } from '../types/ai';
+import { AIEnhancedContent, AIOptions } from '../types/ai';
 import { LangChainClient } from '../ai/langchain-client';
 import { aiCache } from '../ai/cache';
 import { AI_CONFIG } from '../ai/config';
@@ -15,12 +15,12 @@ export class AIParser extends AbstractBaseParser {
     this.langchainClient = new LangChainClient();
   }
 
-  canParse(url: string): boolean {
+  canParse(_url: string): boolean {
     // AI解析器可以处理任何URL，但通常作为fallback使用
     return this.langchainClient.isAvailable();
   }
 
-  async parse(url: string, options?: ParserOptions): Promise<ParsedContent> {
+  async parse(_url: string, _options?: ParserOptions): Promise<ParsedContent> {
     if (!this.langchainClient.isAvailable()) {
       throw new Error('AI parsing is not available. Please check your API configuration.');
     }

@@ -34,6 +34,7 @@ export interface ProcessedError {
 export class ErrorHandler {
   // 更合理的指数退避：1s, 2s, 4s, 8s
   private static readonly RETRY_DELAYS = [1000, 2000, 4000, 8000];
+  private static readonly MAX_ATTEMPTS = 3;
 
   /**
    * 获取重试延迟时间（带随机抖动，防止请求风暴）
@@ -45,7 +46,6 @@ export class ErrorHandler {
     const jitter = Math.floor(baseDelay * 0.2 * (Math.random() - 0.5));
     return baseDelay + jitter;
   }
-  private static readonly MAX_ATTEMPTS = 3;
 
   /**
    * 分析并处理错误
@@ -148,14 +148,6 @@ export class ErrorHandler {
   }
 
   /**
-   * 获取重试延迟时间
-   */
-  private static getRetryDelay(attempt: number): number {
-    const index = Math.min(attempt - 1, this.RETRY_DELAYS.length - 1);
-    return this.RETRY_DELAYS[index];
-  }
-
-  /**
    * 生成用户友好的错误信息
    */
   private static getUserFriendlyMessage(
@@ -163,7 +155,7 @@ export class ErrorHandler {
     originalMessage: string,
     context: ErrorContext
   ): string {
-    const { environment, parser, url } = context;
+    const { environment, parser, url: _url } = context;
 
     switch (category) {
       case 'network':
