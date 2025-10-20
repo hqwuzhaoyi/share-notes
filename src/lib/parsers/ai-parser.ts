@@ -15,8 +15,12 @@ export class AIParser extends AbstractBaseParser {
     this.langchainClient = new LangChainClient();
   }
 
-  canParse(_url: string): boolean {
+  canParse(url: string): boolean {
     // AI解析器可以处理任何URL，但通常作为fallback使用
+    // 但要求URL不能为空
+    if (!url || url.trim().length === 0) {
+      return false;
+    }
     return this.langchainClient.isAvailable();
   }
 
