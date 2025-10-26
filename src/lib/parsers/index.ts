@@ -3,6 +3,8 @@ import { BaseParser, ParsedContent, ParserOptions, PlatformType } from '../types
 import { AIEnhancedContent, AIOptions } from '../types/ai';
 import { PlatformDetector } from '../utils/platform-detector';
 import { URLValidator } from '../utils/url-validator';
+import { urlExtractor } from '../utils/url-extractor';
+import type { ExtractionResult } from '../types/url-extractor';
 import { XiaohongshuParser } from './xiaohongshu';
 import { BilibiliParser } from './bilibili';
 import { WechatParser } from './wechat';
@@ -28,27 +30,44 @@ export class ParserManager {
   }
 
   async parse(url: string, options?: ParserOptions): Promise<ParsedContent> {
+    // === NEW: URL Extraction Step ===
+    const extractionResult: ExtractionResult = urlExtractor.extract(url);
+
+    // Log extraction metrics (NFR-004)
+    this.logExtractionMetrics(extractionResult);
+
+    // Handle extraction failure
+    if (!extractionResult.success) {
+      throw new Error(
+        `${extractionResult.error!.message}. ${extractionResult.error!.hint}`
+      );
+    }
+
+    // Use extracted URL for parsing
+    const cleanUrl = extractionResult.extractedUrl!;
+    // === END NEW ===
+
     // 验证URL
-    if (!URLValidator.isValid(url)) {
+    if (!URLValidator.isValid(cleanUrl)) {
       throw new Error('Invalid or unsafe URL');
     }
 
-    // 清理URL
-    const cleanUrl = URLValidator.sanitizeURL(url);
-    
+    // 清理URL (sanitize but preserve critical params for Xiaohongshu)
+    const finalUrl = URLValidator.sanitizeURL(cleanUrl);
+
     // 检测平台
-    const platform = PlatformDetector.detectPlatform(cleanUrl);
-    
+    const platform = PlatformDetector.detectPlatform(finalUrl);
+
     // 获取对应的解析器
     const parser = this.parsers.get(platform);
-    
+
     try {
-      if (parser && parser.canParse(cleanUrl)) {
+      if (parser && parser.canParse(finalUrl)) {
         // 使用专用解析器
-        return await parser.parse(cleanUrl, options);
+        return await parser.parse(finalUrl, options);
       } else {
         // 使用通用解析器
-        const content = await this.fallbackParser.parse(cleanUrl, options);
+        const content = await this.fallbackParser.parse(finalUrl, options);
         // 更新平台信息
         content.platform = platform;
         return content;
@@ -58,7 +77,7 @@ export class ParserManager {
       if (parser) {
         try {
           console.warn(`Platform parser failed for ${platform}, falling back to generic parser`);
-          const content = await this.fallbackParser.parse(cleanUrl, options);
+          const content = await this.fallbackParser.parse(finalUrl, options);
           content.platform = platform;
           return content;
         } catch (fallbackError) {
@@ -171,10 +190,41 @@ export class ParserManager {
 
   // 批量AI增强
   async batchEnhanceWithAI(
-    contents: ParsedContent[], 
+    contents: ParsedContent[],
     aiOptions?: AIOptions
   ): Promise<AIEnhancedContent[]> {
     return this.aiParser.batchEnhance(contents, aiOptions);
+  }
+
+  /**
+   * Log extraction metrics in structured JSON format
+   * @param result - ExtractionResult containing extraction details
+   */
+  logExtractionMetrics(result: {
+    success: boolean;
+    extractionMethod: string;
+    extractionTimeMs: number;
+    metadata: {
+      inputLength: number;
+      urlsFound: number;
+      xhsUrlsFound: number;
+      aiAttempted: boolean;
+      timestamp: string;
+    };
+    error?: { code: string };
+  }): void {
+    console.log(JSON.stringify({
+      operation: 'url_extraction',
+      success: result.success,
+      method: result.extractionMethod,
+      timeMs: result.extractionTimeMs,
+      inputLength: result.metadata.inputLength,
+      urlsFound: result.metadata.urlsFound,
+      xhsUrlsFound: result.metadata.xhsUrlsFound,
+      aiAttempted: result.metadata.aiAttempted,
+      timestamp: result.metadata.timestamp,
+      errorCode: result.error?.code || null,
+    }));
   }
 }
 

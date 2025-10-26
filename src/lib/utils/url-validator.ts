@@ -68,7 +68,7 @@ export class URLValidator {
       const urlObj = new URL(url);
       // 移除fragment和一些查询参数
       urlObj.hash = '';
-      
+
       // 移除跟踪参数
       const trackingParams = ['utm_source', 'utm_medium', 'utm_campaign', 'utm_content', 'utm_term'];
       trackingParams.forEach(param => {
@@ -78,6 +78,25 @@ export class URLValidator {
       return urlObj.toString();
     } catch {
       return url;
+    }
+  }
+
+  /**
+   * Check if URL is from Xiaohongshu platform
+   * @param url - URL to check
+   * @returns true if URL is from xiaohongshu.com or xhslink.com
+   */
+  static isXiaohongshuUrl(url: string): boolean {
+    try {
+      const urlObj = new URL(url);
+      const domain = urlObj.hostname.toLowerCase();
+
+      return (
+        domain.includes('xiaohongshu.com') ||
+        domain.includes('xhslink.com')
+      );
+    } catch {
+      return false;
     }
   }
 }
