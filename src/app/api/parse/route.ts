@@ -5,6 +5,8 @@ import { ParseRequest, ParseResult, OutputFormat } from '@/lib/types/parser';
 import { AIOptions, AIModel } from '@/lib/types/ai';
 import { ErrorHandler } from '@/lib/utils/error-handler';
 import { getEnvironmentType } from '@/lib/utils/environment-detector';
+import { taskStore } from '@/lib/storage/task-store';
+import { Task } from '@/lib/types/task';
 
 const iosFormatter = new IOSFormatterImpl();
 
@@ -82,6 +84,33 @@ export async function POST(request: NextRequest) {
       ios_url = iosFormatter.formatNotes(parsedContent);
     }
 
+    // 保存任务到历史记录（T006）
+    try {
+      const task: Task = {
+        id: crypto.randomUUID(),
+        title: parsedContent.title,
+        url: parsedContent.originalUrl || url,
+        platform: parsedContent.platform || 'unknown',
+        status: 'success',
+        timestamp: new Date().toISOString(),
+        content: {
+          title: parsedContent.title,
+          content: parsedContent.content,
+          images: parsedContent.images,
+          author: parsedContent.author,
+          publishedAt: parsedContent.publishedAt,
+          aiEnhanced: 'aiEnhanced' in parsedContent ? parsedContent.aiEnhanced : false,
+          summary: 'summary' in parsedContent ? parsedContent.summary : undefined,
+          tags: 'tags' in parsedContent ? parsedContent.tags : undefined,
+          optimizedTitle: 'optimizedTitle' in parsedContent ? parsedContent.optimizedTitle : undefined,
+        },
+      };
+      await taskStore.saveTask(task);
+    } catch (taskError) {
+      // Log but don't fail the request if task saving fails
+      console.warn('Failed to save task to history:', taskError);
+    }
+
     // 返回结果
     const result: ParseResult = {
       success: true,
@@ -100,8 +129,11 @@ export async function POST(request: NextRequest) {
 
   } catch (error) {
     // 使用统一错误处理
+    const requestBody = await request.json().catch(() => ({}));
+    const failedUrl = requestBody?.url || 'unknown';
+
     const processedError = ErrorHandler.processError(error as Error, {
-      url: (await request.json().catch(() => ({})))?.url,
+      url: failedUrl,
       parser: 'api-endpoint',
       environment: getEnvironmentType()
     });
@@ -110,6 +142,25 @@ export async function POST(request: NextRequest) {
     ErrorHandler.logError(processedError);
 
     console.error('Parse API Error:', processedError.userMessage);
+
+    // 保存失败任务到历史记录（T006）
+    try {
+      const failedTask: Task = {
+        id: crypto.randomUUID(),
+        title: 'Parse Failed',
+        url: failedUrl,
+        platform: 'unknown',
+        status: 'failed',
+        timestamp: new Date().toISOString(),
+        error: {
+          message: processedError.userMessage,
+          code: processedError.code || 'PARSE_ERROR',
+        },
+      };
+      await taskStore.saveTask(failedTask);
+    } catch (taskError) {
+      console.warn('Failed to save failed task to history:', taskError);
+    }
 
     const result: ParseResult = {
       success: false,
