@@ -489,3 +489,9 @@ export class PlatformParser extends BaseParser {
 - `test/test-api.js` - Comprehensive testing
 
 This project successfully combines traditional web scraping with modern AI enhancement to create a powerful content parsing service optimized for iOS integration.
+
+## Active Technologies
+- TypeScript 5.x with React 19.1.0 and Next.js 15.5.0 + Next.js (App Router), React, Tailwind CSS 4 (001-task-visualization)
+
+## Recent Changes
+- 001-task-visualization: Added TypeScript 5.x with React 19.1.0 and Next.js 15.5.0 + Next.js (App Router), React, Tailwind CSS 4
