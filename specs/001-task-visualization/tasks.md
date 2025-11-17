@@ -31,9 +31,9 @@ This is a Next.js full-stack web application with paths at repository root:
 
 **Purpose**: Project initialization and basic structure for task visualization feature
 
-- [ ] T001 Create data storage directory structure at `data/tasks/`
-- [ ] T002 [P] Create components directory structure at `src/components/tasks/`
-- [ ] T003 [P] Create storage module directory at `src/lib/storage/`
+- [X] T001 Create data storage directory structure at `data/tasks/`
+- [X] T002 [P] Create components directory structure at `src/components/tasks/`
+- [X] T003 [P] Create storage module directory at `src/lib/storage/`
 
 ---
 
@@ -43,9 +43,9 @@ This is a Next.js full-stack web application with paths at repository root:
 
 **⚠️ CRITICAL**: No user story work can begin until this phase is complete
 
-- [ ] T004 Define Task type interfaces in `src/lib/types/task.ts` (Task, ParsedContent, TaskError, TaskMetadata, PlatformType, TaskStatus enums)
-- [ ] T005 Implement TaskStore class with file-based storage in `src/lib/storage/task-store.ts` (saveTask, getTasks, getTaskById, index management, in-memory cache)
-- [ ] T006 Integrate task saving into existing parse API at `src/app/api/parse/route.ts` (add taskStore.saveTask calls for success and failure cases)
+- [X] T004 Define Task type interfaces in `src/lib/types/task.ts` (Task, ParsedContent, TaskError, TaskMetadata, PlatformType, TaskStatus enums)
+- [X] T005 Implement TaskStore class with file-based storage in `src/lib/storage/task-store.ts` (saveTask, getTasks, getTaskById, index management, in-memory cache)
+- [X] T006 Integrate task saving into existing parse API at `src/app/api/parse/route.ts` (add taskStore.saveTask calls for success and failure cases)
 
 **Checkpoint**: Foundation ready - storage layer complete, types defined, parse API integrated
 
@@ -59,25 +59,25 @@ This is a Next.js full-stack web application with paths at repository root:
 
 ### Backend API for User Story 1
 
-- [ ] T007 [US1] Create tasks API route handler at `src/app/api/tasks/route.ts` with GET method for paginated task list
-- [ ] T008 [US1] Implement query parameter parsing (page, pageSize) in `src/app/api/tasks/route.ts`
-- [ ] T009 [US1] Implement pagination logic using TaskStore.getTasks in `src/app/api/tasks/route.ts`
-- [ ] T010 [US1] Add error handling and validation for API endpoint in `src/app/api/tasks/route.ts`
+- [X] T007 [US1] Create tasks API route handler at `src/app/api/tasks/route.ts` with GET method for paginated task list
+- [X] T008 [US1] Implement query parameter parsing (page, pageSize) in `src/app/api/tasks/route.ts`
+- [X] T009 [US1] Implement pagination logic using TaskStore.getTasks in `src/app/api/tasks/route.ts`
+- [X] T010 [US1] Add error handling and validation for API endpoint in `src/app/api/tasks/route.ts`
 
 ### Frontend Components for User Story 1
 
-- [ ] T011 [P] [US1] Create EmptyState component at `src/components/tasks/EmptyState.tsx` (displays message when no tasks exist)
-- [ ] T012 [P] [US1] Create TaskItem component at `src/components/tasks/TaskItem.tsx` (displays single task with title, URL, platform, status, timestamp)
-- [ ] T013 [P] [US1] Create Pagination component at `src/components/tasks/Pagination.tsx` (page navigation controls using URL params)
-- [ ] T014 [US1] Create TaskList container component at `src/components/tasks/TaskList.tsx` (orchestrates TaskItem, EmptyState, Pagination)
-- [ ] T015 [US1] Add platform badge styling and status indicators (success/failed/pending) to TaskItem component in `src/components/tasks/TaskItem.tsx`
+- [X] T011 [P] [US1] Create EmptyState component at `src/components/tasks/EmptyState.tsx` (displays message when no tasks exist)
+- [X] T012 [P] [US1] Create TaskItem component at `src/components/tasks/TaskItem.tsx` (displays single task with title, URL, platform, status, timestamp)
+- [X] T013 [P] [US1] Create Pagination component at `src/components/tasks/Pagination.tsx` (page navigation controls using URL params)
+- [X] T014 [US1] Create TaskList container component at `src/components/tasks/TaskList.tsx` (orchestrates TaskItem, EmptyState, Pagination)
+- [X] T015 [US1] Add platform badge styling and status indicators (success/failed/pending) to TaskItem component in `src/components/tasks/TaskItem.tsx`
 
 ### Home Page Integration for User Story 1
 
-- [ ] T016 [US1] Replace home page at `src/app/page.tsx` with Server Component that fetches tasks from `/api/tasks`
-- [ ] T017 [US1] Implement URL param handling for pagination (searchParams.page) in `src/app/page.tsx`
-- [ ] T018 [US1] Add loading state using Next.js Suspense in `src/app/page.tsx`
-- [ ] T019 [US1] Add error boundary for graceful error handling in `src/app/page.tsx`
+- [X] T016 [US1] Replace home page at `src/app/page.tsx` with Server Component that fetches tasks from `/api/tasks`
+- [X] T017 [US1] Implement URL param handling for pagination (searchParams.page) in `src/app/page.tsx`
+- [X] T018 [US1] Add loading state using Next.js Suspense in `src/app/page.tsx`
+- [X] T019 [US1] Add error boundary for graceful error handling in `src/app/page.tsx`
 
 **Checkpoint**: User Story 1 complete - users can view paginated task list on home page with empty state handling
 
@@ -91,16 +91,16 @@ This is a Next.js full-stack web application with paths at repository root:
 
 ### Components for User Story 2
 
-- [ ] T020 [P] [US2] Create TaskDetails modal component at `src/components/tasks/TaskDetails.tsx` (displays full task content, images, metadata)
-- [ ] T021 [US2] Add click handler to TaskItem component in `src/components/tasks/TaskItem.tsx` to open TaskDetails modal
-- [ ] T022 [US2] Implement modal open/close state management using React hooks in TaskDetails
-- [ ] T023 [US2] Add detail view formatting for ParsedContent (title, content, images, author, publishedAt, AI enhancements) in TaskDetails
-- [ ] T024 [US2] Add error detail display for failed tasks (error message, code) in TaskDetails
+- [X] T020 [P] [US2] Create TaskDetails modal component at `src/components/tasks/TaskDetails.tsx` (displays full task content, images, metadata)
+- [X] T021 [US2] Add click handler to TaskItem component in `src/components/tasks/TaskItem.tsx` to open TaskDetails modal
+- [X] T022 [US2] Implement modal open/close state management using React hooks in TaskDetails
+- [X] T023 [US2] Add detail view formatting for ParsedContent (title, content, images, author, publishedAt, AI enhancements) in TaskDetails
+- [X] T024 [US2] Add error detail display for failed tasks (error message, code) in TaskDetails
 
 ### API Enhancement for User Story 2 (Optional)
 
-- [ ] T025 [US2] Add GET /api/tasks/[id] route at `src/app/api/tasks/[id]/route.ts` for fetching single task details
-- [ ] T026 [US2] Implement getTaskById logic using TaskStore in `src/app/api/tasks/[id]/route.ts`
+- [X] T025 [US2] Add GET /api/tasks/[id] route at `src/app/api/tasks/[id]/route.ts` for fetching single task details
+- [X] T026 [US2] Implement getTaskById logic using TaskStore in `src/app/api/tasks/[id]/route.ts`
 
 **Checkpoint**: User Story 2 complete - users can view detailed task information via modal/detail view
 
@@ -114,23 +114,23 @@ This is a Next.js full-stack web application with paths at repository root:
 
 ### Components for User Story 3
 
-- [ ] T027 [P] [US3] Create TaskFilters component at `src/components/tasks/TaskFilters.tsx` (search input, platform dropdown, clear filters button)
-- [ ] T028 [US3] Implement search input with debounced onChange handler in TaskFilters
-- [ ] T029 [US3] Implement platform filter dropdown (Xiaohongshu, Bilibili, WeChat, All) in TaskFilters
-- [ ] T030 [US3] Add filter state management using URL params (searchParams) in TaskFilters
+- [X] T027 [P] [US3] Create TaskFilters component at `src/components/tasks/TaskFilters.tsx` (search input, platform dropdown, clear filters button)
+- [X] T028 [US3] Implement search input with debounced onChange handler in TaskFilters
+- [X] T029 [US3] Implement platform filter dropdown (Xiaohongshu, Bilibili, WeChat, All) in TaskFilters
+- [X] T030 [US3] Add filter state management using URL params (searchParams) in TaskFilters
 
 ### API Enhancement for User Story 3
 
-- [ ] T031 [US3] Add platform filter support to `src/app/api/tasks/route.ts` (read platform query param)
-- [ ] T032 [US3] Add status filter support to `src/app/api/tasks/route.ts` (read status query param)
-- [ ] T033 [US3] Add search functionality to `src/app/api/tasks/route.ts` (search in title and URL)
-- [ ] T034 [US3] Implement filter logic in TaskStore.getTasks method in `src/lib/storage/task-store.ts`
+- [X] T031 [US3] Add platform filter support to `src/app/api/tasks/route.ts` (read platform query param)
+- [X] T032 [US3] Add status filter support to `src/app/api/tasks/route.ts` (read status query param)
+- [X] T033 [US3] Add search functionality to `src/app/api/tasks/route.ts` (search in title and URL)
+- [X] T034 [US3] Implement filter logic in TaskStore.getTasks method in `src/lib/storage/task-store.ts`
 
 ### Integration for User Story 3
 
-- [ ] T035 [US3] Add TaskFilters component to home page in `src/app/page.tsx`
-- [ ] T036 [US3] Update API fetch in `src/app/page.tsx` to include filter query params
-- [ ] T037 [US3] Test filter combinations (platform + search, status + search, etc.)
+- [X] T035 [US3] Add TaskFilters component to home page in `src/app/page.tsx`
+- [X] T036 [US3] Update API fetch in `src/app/page.tsx` to include filter query params
+- [X] T037 [US3] Test filter combinations (platform + search, status + search, etc.)
 
 **Checkpoint**: User Story 3 complete - users can filter and search tasks efficiently
 
@@ -140,15 +140,15 @@ This is a Next.js full-stack web application with paths at repository root:
 
 **Purpose**: Improvements that affect multiple user stories and final quality assurance
 
-- [ ] T038 [P] Add responsive design improvements for mobile viewport to TaskList and TaskItem components
-- [ ] T039 [P] Optimize TaskStore cache eviction strategy (LRU implementation) in `src/lib/storage/task-store.ts`
-- [ ] T040 [P] Add data sanitization for task storage (truncate long content, remove sensitive data) in TaskStore
-- [ ] T041 Add loading skeletons for better perceived performance in `src/app/page.tsx`
-- [ ] T042 [P] Add accessibility improvements (ARIA labels, keyboard navigation) to TaskItem and Pagination components
-- [ ] T043 Verify quickstart.md examples work correctly (run through all code examples)
-- [ ] T044 Add index.json versioning and migration support in TaskStore for future schema changes
-- [ ] T045 Performance testing: Verify page load <2s with empty state (SC-001), <3s with 100+ tasks (SC-005)
-- [ ] T046 Manual testing: Complete all acceptance scenarios from spec.md for US1, US2, US3
+- [X] T038 [P] Add responsive design improvements for mobile viewport to TaskList and TaskItem components
+- [X] T039 [P] Optimize TaskStore cache eviction strategy (LRU implementation) in `src/lib/storage/task-store.ts`
+- [X] T040 [P] Add data sanitization for task storage (truncate long content, remove sensitive data) in TaskStore
+- [X] T041 Add loading skeletons for better perceived performance in `src/app/page.tsx`
+- [X] T042 [P] Add accessibility improvements (ARIA labels, keyboard navigation) to TaskItem and Pagination components
+- [X] T043 Verify quickstart.md examples work correctly (run through all code examples)
+- [X] T044 Add index.json versioning and migration support in TaskStore for future schema changes
+- [X] T045 Performance testing: Verify page load <2s with empty state (SC-001), <3s with 100+ tasks (SC-005)
+- [X] T046 Manual testing: Complete all acceptance scenarios from spec.md for US1, US2, US3
 
 ---
 

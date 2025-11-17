@@ -1,8 +1,9 @@
 /**
- * TaskItem Component - T012, T015
+ * TaskItem Component - T012, T015, T021
  *
  * Displays a single task with title, URL, platform, status, and timestamp.
  * Includes platform badges and status indicators (T015).
+ * Includes click handler to open TaskDetails modal (T021).
  */
 
 'use client';
@@ -11,9 +12,10 @@ import { Task } from '@/lib/types/task';
 
 interface TaskItemProps {
   task: Task;
+  onClick?: () => void;
 }
 
-export function TaskItem({ task }: TaskItemProps) {
+export function TaskItem({ task, onClick }: TaskItemProps) {
   // Platform badge colors
   const platformColors = {
     xiaohongshu: 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-300',
@@ -60,7 +62,18 @@ export function TaskItem({ task }: TaskItemProps) {
   });
 
   return (
-    <div className="border border-gray-200 dark:border-gray-800 rounded-lg p-4 hover:border-gray-300 dark:hover:border-gray-700 transition-colors">
+    <div
+      className="border border-gray-200 dark:border-gray-800 rounded-lg p-4 hover:border-gray-300 dark:hover:border-gray-700 transition-colors cursor-pointer hover:shadow-md"
+      onClick={onClick}
+      role="button"
+      tabIndex={0}
+      onKeyDown={(e) => {
+        if (e.key === 'Enter' || e.key === ' ') {
+          e.preventDefault();
+          onClick?.();
+        }
+      }}
+    >
       {/* Header with status and platform */}
       <div className="flex items-center justify-between mb-2">
         <div className="flex items-center gap-2">

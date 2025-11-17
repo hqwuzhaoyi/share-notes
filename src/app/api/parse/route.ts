@@ -98,11 +98,11 @@ export async function POST(request: NextRequest) {
           content: parsedContent.content,
           images: parsedContent.images,
           author: parsedContent.author,
-          publishedAt: parsedContent.publishedAt,
-          aiEnhanced: 'aiEnhanced' in parsedContent ? parsedContent.aiEnhanced : false,
-          summary: 'summary' in parsedContent ? parsedContent.summary : undefined,
-          tags: 'tags' in parsedContent ? parsedContent.tags : undefined,
-          optimizedTitle: 'optimizedTitle' in parsedContent ? parsedContent.optimizedTitle : undefined,
+          publishedAt: parsedContent.publishedAt ? (typeof parsedContent.publishedAt === 'string' ? parsedContent.publishedAt : parsedContent.publishedAt.toISOString()) : undefined,
+          aiEnhanced: 'aiEnhanced' in parsedContent ? Boolean(parsedContent.aiEnhanced) : false,
+          summary: 'summary' in parsedContent && typeof parsedContent.summary === 'string' ? parsedContent.summary : undefined,
+          tags: 'tags' in parsedContent && Array.isArray(parsedContent.tags) ? parsedContent.tags : undefined,
+          optimizedTitle: 'optimizedTitle' in parsedContent && typeof parsedContent.optimizedTitle === 'string' ? parsedContent.optimizedTitle : undefined,
         },
       };
       await taskStore.saveTask(task);
@@ -154,7 +154,7 @@ export async function POST(request: NextRequest) {
         timestamp: new Date().toISOString(),
         error: {
           message: processedError.userMessage,
-          code: processedError.code || 'PARSE_ERROR',
+          code: 'code' in processedError && typeof processedError.code === 'string' ? processedError.code : 'PARSE_ERROR',
         },
       };
       await taskStore.saveTask(failedTask);

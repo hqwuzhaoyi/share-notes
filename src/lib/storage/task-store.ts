@@ -34,14 +34,15 @@ class TaskStore {
    * Load task index from file system
    */
   private async loadIndex(): Promise<TaskIndex> {
-    if (this.indexCache) {
+    if (this.indexCache !== null) {
       return this.indexCache;
     }
 
     try {
       const indexData = await fs.readFile(INDEX_FILE, 'utf-8');
-      this.indexCache = JSON.parse(indexData);
-      return this.indexCache;
+      const parsed: TaskIndex = JSON.parse(indexData);
+      this.indexCache = parsed;
+      return parsed;
     } catch (error) {
       // Index doesn't exist yet, create empty one
       const emptyIndex: TaskIndex = {
@@ -196,8 +197,15 @@ class TaskStore {
       return null;
     }
 
+    // Use entry timestamp instead of undefined taskId for filename
+    const timestamp = entry.timestamp;
+    if (!timestamp) {
+      console.error(`Task ${taskId} missing timestamp`);
+      return null;
+    }
+
     try {
-      const filename = this.getTaskFilename(taskId, entry.timestamp);
+      const filename = this.getTaskFilename(taskId, timestamp);
       const taskData = await fs.readFile(filename, 'utf-8');
       const task: Task = JSON.parse(taskData);
 
@@ -226,7 +234,9 @@ class TaskStore {
     // Evict oldest if cache is full
     if (this.taskCache.size > this.maxCacheSize) {
       const firstKey = this.taskCache.keys().next().value;
-      this.taskCache.delete(firstKey);
+      if (firstKey !== undefined) {
+        this.taskCache.delete(firstKey);
+      }
     }
   }
 

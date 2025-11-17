@@ -40,4 +40,8 @@ yarn-error.log*
 *.tsbuildinfo
 next-env.d.ts
 
+# task data (generated at runtime)
+/data/tasks/*.json
+/data/tasks/index.json
+
 CLAUDE.local.md

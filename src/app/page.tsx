@@ -7,6 +7,7 @@
 
 import { Suspense } from 'react';
 import { TaskList } from '@/components/tasks/TaskList';
+import { TaskFilters } from '@/components/tasks/TaskFilters';
 import { TaskListResponse } from '@/lib/types/task';
 
 // T019: Error boundary component
@@ -59,18 +60,27 @@ function LoadingState() {
   );
 }
 
-// T016-T017: Main page component with server-side data fetching
+// T016-T017, T035-T036: Main page component with server-side data fetching and filters
 export default async function HomePage({
   searchParams,
 }: {
-  searchParams: { page?: string };
+  searchParams: Promise<{ page?: string; platform?: string; status?: string; search?: string }>;
 }) {
-  const page = parseInt(searchParams.page || '1', 10);
+  const params = await searchParams;
+  const page = parseInt(params.page || '1', 10);
+  const platform = params.platform;
+  const status = params.status;
+  const search = params.search;
 
   try {
-    // T016: Server-side data fetching
+    // T016, T036: Server-side data fetching with filter params
     const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:4000';
-    const response = await fetch(`${baseUrl}/api/tasks?page=${page}`, {
+    const queryParams = new URLSearchParams({ page: page.toString() });
+    if (platform) queryParams.set('platform', platform);
+    if (status) queryParams.set('status', status);
+    if (search) queryParams.set('search', search);
+
+    const response = await fetch(`${baseUrl}/api/tasks?${queryParams.toString()}`, {
       cache: 'no-store', // Don't cache for real-time data
     });
 
@@ -91,6 +101,9 @@ export default async function HomePage({
             All processed URL parsing tasks with their results and status
           </p>
         </div>
+
+        {/* T035: Task filters */}
+        <TaskFilters />
 
         {/* Task list with loading state (T018) */}
         <Suspense fallback={<LoadingState />}>
