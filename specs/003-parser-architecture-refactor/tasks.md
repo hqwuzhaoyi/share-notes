@@ -178,9 +178,9 @@ Paths use existing Next.js project structure:
 - [X] T057 [P] Add JSDoc comments to all strategy interfaces in src/lib/parsers/strategies/
 - [X] T058 Code review for consistent naming conventions across all new files
 - [X] T059 Verify quickstart.md example works (add YouTube parser in <100 lines)
-- [ ] T060 Run full test suite and ensure all tests pass (DEFERRED: 15 test errors in ai-parser.test.ts need `type: 'article'` - Phase 4-6)
+- [ ] T060 Run full test suite and ensure all tests pass (AI tests require API keys)
 - [X] T061 Build verification (npm run build) passes ✅
-- [ ] T062 Type check verification (npm run check:types) passes (BLOCKED: Same 15 test file errors - Phase 4-6)
+- [X] T062 Type check verification (npm run check:types) passes ✅ (Fixed: Added type discriminators to test mocks)
 - [X] T063 Lint verification (npm run lint) passes ✅ (0 errors, 17 warnings - acceptable)
 
 ---
