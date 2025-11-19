@@ -167,7 +167,7 @@ export function toArticleContent(legacy: Omit<ArticleContent, 'type'>): ArticleC
  * @returns True if content is ArticleContent
  */
 export function isArticleContent(content: ParsedContent): content is ArticleContent {
-  return content.type === 'article';
+  return content?.type === 'article';
 }
 
 /**
@@ -178,7 +178,7 @@ export function isArticleContent(content: ParsedContent): content is ArticleCont
  * @returns True if content is VideoContent
  */
 export function isVideoContent(content: ParsedContent): content is VideoContent {
-  return content.type === 'video';
+  return content?.type === 'video';
 }
 
 /**
@@ -189,7 +189,7 @@ export function isVideoContent(content: ParsedContent): content is VideoContent 
  * @returns True if content is ImageGalleryContent
  */
 export function isImageGalleryContent(content: ParsedContent): content is ImageGalleryContent {
-  return content.type === 'image-gallery';
+  return content?.type === 'image-gallery';
 }
 
 /**
@@ -200,7 +200,7 @@ export function isImageGalleryContent(content: ParsedContent): content is ImageG
  * @returns True if content is BookContent
  */
 export function isBookContent(content: ParsedContent): content is BookContent {
-  return content.type === 'book';
+  return content?.type === 'book';
 }
 
 /**
@@ -211,7 +211,7 @@ export function isBookContent(content: ParsedContent): content is BookContent {
  * @returns True if content is TweetContent
  */
 export function isTweetContent(content: ParsedContent): content is TweetContent {
-  return content.type === 'tweet';
+  return content?.type === 'tweet';
 }
 
 /**
