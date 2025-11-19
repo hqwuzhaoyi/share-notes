@@ -158,9 +158,9 @@ Paths use existing Next.js project structure:
 
 ### Implementation for User Story 4
 
-- [ ] T049 [US4] Update FlomoFormatter to handle all content types with switch/fallback in src/lib/formatters/flomo-formatter.ts
-- [ ] T050 [P] [US4] Update NotesFormatter to handle all content types with switch/fallback in src/lib/formatters/notes-formatter.ts
-- [ ] T051 [P] [US4] Update RawFormatter to handle all content types in src/lib/formatters/raw-formatter.ts
+- [X] T049 [US4] Update FlomoFormatter to handle all content types with switch/fallback in src/lib/formatters/flomo-formatter.ts ✅ (Uses getTextContent/getImages helpers)
+- [X] T050 [P] [US4] Update NotesFormatter to handle all content types with switch/fallback in src/lib/formatters/notes-formatter.ts ✅ (Uses getTextContent/getImages helpers)
+- [X] T051 [P] [US4] Update RawFormatter to handle all content types in src/lib/formatters/raw-formatter.ts ✅ (JSON.stringify handles all types)
 - [ ] T052 [US4] Ensure legacy ParsedContent type alias still works in src/lib/types/parser.ts
 - [ ] T053 [US4] Run existing test suite (npm test) and verify 100% pass rate
 - [ ] T054 [US4] Add capability query for content types to /api/formatters in src/app/api/formatters/route.ts
