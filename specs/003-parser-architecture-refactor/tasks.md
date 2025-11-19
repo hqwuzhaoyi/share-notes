@@ -102,7 +102,7 @@ Paths use existing Next.js project structure:
 
 ### Implementation for User Story 2
 
-- [ ] T033 [US2] Create XhsImageGalleryExtractor implementing ContentExtractor<ImageGalleryContent> in src/lib/parsers/extractors/xhs-image-gallery-extractor.ts
+- [X] T033 [US2] Create XhsImageGalleryExtractor implementing ContentExtractor<ImageGalleryContent> in src/lib/parsers/extractors/xhs-image-gallery-extractor.ts ✅
 - [ ] T034 [US2] Refactor XiaohongshuParser to use strategy composition in src/lib/parsers/xiaohongshu.ts
   - Use HtmlFetcher for HTML retrieval
   - Use XhsContentDetector for type detection
@@ -134,8 +134,8 @@ Paths use existing Next.js project structure:
 
 ### Implementation for User Story 3
 
-- [ ] T041 [P] [US3] Create type guard functions (isArticleContent, isVideoContent, isImageGalleryContent, isBookContent, isTweetContent) in src/lib/types/content.ts
-- [ ] T042 [P] [US3] Create Zod schemas for all content types in src/lib/types/content-schemas.ts
+- [X] T041 [P] [US3] Create type guard functions (isArticleContent, isVideoContent, isImageGalleryContent, isBookContent, isTweetContent) in src/lib/types/content.ts ✅
+- [X] T042 [P] [US3] Create Zod schemas for all content types in src/lib/types/content-schemas.ts ✅ (Already exists from Phase 1)
 - [ ] T043 [US3] Update ParserManager.parse() to return properly typed ParsedContent in src/lib/parsers/index.ts
 - [ ] T044 [US3] Update /api/parse route to handle multi-type responses in src/app/api/parse/route.ts
 - [ ] T045 [US3] Add runtime validation using Zod schemas at parser-API boundary in src/app/api/parse/route.ts
