@@ -1,103 +1,132 @@
-import Image from "next/image";
+/**
+ * Home Page - Task Visualization Dashboard (T016-T019)
+ *
+ * Server Component that fetches tasks and displays the task visualization dashboard.
+ * Replaces the default Next.js welcome page with task history.
+ */
 
-export default function Home() {
+import { Suspense } from 'react';
+import { TaskList } from '@/components/tasks/TaskList';
+import { TaskFilters } from '@/components/tasks/TaskFilters';
+import { TaskListResponse } from '@/lib/types/task';
+
+// T019: Error boundary component
+function ErrorDisplay({ error }: { error: string }) {
   return (
-    <div className="font-sans grid grid-rows-[20px_1fr_20px] items-center justify-items-center min-h-screen p-8 pb-20 gap-16 sm:p-20">
-      <main className="flex flex-col gap-[32px] row-start-2 items-center sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={180}
-          height={38}
-          priority
-        />
-        <ol className="font-mono list-inside list-decimal text-sm/6 text-center sm:text-left">
-          <li className="mb-2 tracking-[-.01em]">
-            Get started by editing{" "}
-            <code className="bg-black/[.05] dark:bg-white/[.06] font-mono font-semibold px-1 py-0.5 rounded">
-              src/app/page.tsx
-            </code>
-            .
-          </li>
-          <li className="tracking-[-.01em]">
-            Save and see your changes instantly.
-          </li>
-        </ol>
-
-        <div className="flex gap-4 items-center flex-col sm:flex-row">
-          <a
-            className="rounded-full border border-solid border-transparent transition-colors flex items-center justify-center bg-foreground text-background gap-2 hover:bg-[#383838] dark:hover:bg-[#ccc] font-medium text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 sm:w-auto"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
+    <div className="flex flex-col items-center justify-center min-h-[400px] p-8">
+      <div className="max-w-md text-center">
+        <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-red-100 dark:bg-red-900/30 flex items-center justify-center">
+          <svg
+            className="w-8 h-8 text-red-600 dark:text-red-400"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
           >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={20}
-              height={20}
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth={2}
+              d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
             />
-            Deploy now
-          </a>
-          <a
-            className="rounded-full border border-solid border-black/[.08] dark:border-white/[.145] transition-colors flex items-center justify-center hover:bg-[#f2f2f2] dark:hover:bg-[#1a1a1a] hover:border-transparent font-medium text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 w-full sm:w-auto md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Read our docs
-          </a>
+          </svg>
         </div>
-      </main>
-      <footer className="row-start-3 flex gap-[24px] flex-wrap items-center justify-center">
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/file.svg"
-            alt="File icon"
-            width={16}
-            height={16}
-          />
-          Learn
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/window.svg"
-            alt="Window icon"
-            width={16}
-            height={16}
-          />
-          Examples
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/globe.svg"
-            alt="Globe icon"
-            width={16}
-            height={16}
-          />
-          Go to nextjs.org →
-        </a>
-      </footer>
+        <h2 className="text-xl font-bold text-gray-900 dark:text-gray-100 mb-2">
+          Failed to Load Tasks
+        </h2>
+        <p className="text-gray-600 dark:text-gray-400">{error}</p>
+      </div>
     </div>
   );
+}
+
+// T018: Loading state component
+function LoadingState() {
+  return (
+    <div className="space-y-4">
+      {[1, 2, 3].map((i) => (
+        <div
+          key={i}
+          className="border border-gray-200 dark:border-gray-800 rounded-lg p-4 animate-pulse"
+        >
+          <div className="flex items-center gap-2 mb-3">
+            <div className="h-6 w-20 bg-gray-200 dark:bg-gray-800 rounded"></div>
+            <div className="h-6 w-24 bg-gray-200 dark:bg-gray-800 rounded"></div>
+          </div>
+          <div className="h-6 w-3/4 bg-gray-200 dark:bg-gray-800 rounded mb-2"></div>
+          <div className="h-4 w-full bg-gray-200 dark:bg-gray-800 rounded"></div>
+        </div>
+      ))}
+    </div>
+  );
+}
+
+// T016-T017, T035-T036: Main page component with server-side data fetching and filters
+export default async function HomePage({
+  searchParams,
+}: {
+  searchParams: Promise<{ page?: string; platform?: string; status?: string; search?: string }>;
+}) {
+  const params = await searchParams;
+  const page = parseInt(params.page || '1', 10);
+  const platform = params.platform;
+  const status = params.status;
+  const search = params.search;
+
+  try {
+    // T016, T036: Server-side data fetching with filter params
+    const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:4000';
+    const queryParams = new URLSearchParams({ page: page.toString() });
+    if (platform) queryParams.set('platform', platform);
+    if (status) queryParams.set('status', status);
+    if (search) queryParams.set('search', search);
+
+    const response = await fetch(`${baseUrl}/api/tasks?${queryParams.toString()}`, {
+      cache: 'no-store', // Don't cache for real-time data
+    });
+
+    if (!response.ok) {
+      throw new Error(`Failed to fetch tasks: ${response.statusText}`);
+    }
+
+    const data: TaskListResponse = await response.json();
+
+    return (
+      <main className="container mx-auto max-w-5xl p-4 sm:p-8 min-h-screen">
+        {/* Header */}
+        <div className="mb-8">
+          <h1 className="text-3xl sm:text-4xl font-bold text-gray-900 dark:text-gray-100 mb-2">
+            Task History
+          </h1>
+          <p className="text-gray-600 dark:text-gray-400">
+            All processed URL parsing tasks with their results and status
+          </p>
+        </div>
+
+        {/* T035: Task filters */}
+        <TaskFilters />
+
+        {/* Task list with loading state (T018) */}
+        <Suspense fallback={<LoadingState />}>
+          <TaskList tasks={data.tasks} pagination={data.pagination} />
+        </Suspense>
+      </main>
+    );
+  } catch (error) {
+    // T019: Error handling
+    const errorMessage =
+      error instanceof Error ? error.message : 'An unexpected error occurred';
+    return (
+      <main className="container mx-auto max-w-5xl p-4 sm:p-8 min-h-screen">
+        <div className="mb-8">
+          <h1 className="text-3xl sm:text-4xl font-bold text-gray-900 dark:text-gray-100 mb-2">
+            Task History
+          </h1>
+          <p className="text-gray-600 dark:text-gray-400">
+            All processed URL parsing tasks with their results and status
+          </p>
+        </div>
+        <ErrorDisplay error={errorMessage} />
+      </main>
+    );
+  }
 }

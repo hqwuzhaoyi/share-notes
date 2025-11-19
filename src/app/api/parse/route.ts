@@ -1,12 +1,15 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { parserManager } from '@/lib/parsers';
 import { IOSFormatterImpl } from '@/lib/utils/ios-formatter';
+import { formatterRegistry } from '@/lib/formatters'; // NEW: Use formatter registry
 import { ParseRequest, ParseResult, OutputFormat } from '@/lib/types/parser';
 import { AIOptions, AIModel } from '@/lib/types/ai';
 import { ErrorHandler } from '@/lib/utils/error-handler';
 import { getEnvironmentType } from '@/lib/utils/environment-detector';
+import { taskStore } from '@/lib/storage/task-store';
+import { Task } from '@/lib/types/task';
 
-const iosFormatter = new IOSFormatterImpl();
+const iosFormatter = new IOSFormatterImpl(); // DEPRECATED: Kept for backward compatibility
 
 export async function POST(request: NextRequest) {
   try {
@@ -74,12 +77,58 @@ export async function POST(request: NextRequest) {
       }
     );
 
-    // 格式化输出
+    // 格式化输出 (NEW: Using formatter registry)
     let ios_url: string | undefined;
-    if (output_format === 'flomo') {
-      ios_url = iosFormatter.formatFlomo(parsedContent);
-    } else if (output_format === 'notes') {
-      ios_url = iosFormatter.formatNotes(parsedContent);
+    if (output_format && output_format !== 'raw') {
+      try {
+        const formatter = formatterRegistry.get(output_format);
+        const formatResult = formatter.format(parsedContent);
+
+        if (!formatResult.success) {
+          // Formatting failed - throw to trigger fallback
+          throw formatResult.error;
+        }
+
+        ios_url = formatResult.data.value;
+      } catch (formatterError) {
+        // Fallback to old formatter only if new formatter unavailable or fails
+        console.warn(`New formatter failed for ${output_format}, using legacy formatter:`, formatterError);
+        if (output_format === 'flomo') {
+          ios_url = iosFormatter.formatFlomo(parsedContent);
+        } else if (output_format === 'notes') {
+          ios_url = iosFormatter.formatNotes(parsedContent);
+        } else {
+          // Unknown format - re-throw error
+          throw new Error(`Unsupported output format: ${output_format}`);
+        }
+      }
+    }
+
+    // 保存任务到历史记录（T006）
+    try {
+      const task: Task = {
+        id: crypto.randomUUID(),
+        title: parsedContent.title,
+        url: parsedContent.originalUrl || url,
+        platform: parsedContent.platform || 'unknown',
+        status: 'success',
+        timestamp: new Date().toISOString(),
+        content: {
+          title: parsedContent.title,
+          content: parsedContent.content,
+          images: parsedContent.images,
+          author: parsedContent.author,
+          publishedAt: parsedContent.publishedAt ? (typeof parsedContent.publishedAt === 'string' ? parsedContent.publishedAt : parsedContent.publishedAt.toISOString()) : undefined,
+          aiEnhanced: 'aiEnhanced' in parsedContent ? Boolean(parsedContent.aiEnhanced) : false,
+          summary: 'summary' in parsedContent && typeof parsedContent.summary === 'string' ? parsedContent.summary : undefined,
+          tags: 'tags' in parsedContent && Array.isArray(parsedContent.tags) ? parsedContent.tags : undefined,
+          optimizedTitle: 'optimizedTitle' in parsedContent && typeof parsedContent.optimizedTitle === 'string' ? parsedContent.optimizedTitle : undefined,
+        },
+      };
+      await taskStore.saveTask(task);
+    } catch (taskError) {
+      // Log but don't fail the request if task saving fails
+      console.warn('Failed to save task to history:', taskError);
     }
 
     // 返回结果
@@ -100,8 +149,11 @@ export async function POST(request: NextRequest) {
 
   } catch (error) {
     // 使用统一错误处理
+    const requestBody = await request.json().catch(() => ({}));
+    const failedUrl = requestBody?.url || 'unknown';
+
     const processedError = ErrorHandler.processError(error as Error, {
-      url: (await request.json().catch(() => ({})))?.url,
+      url: failedUrl,
       parser: 'api-endpoint',
       environment: getEnvironmentType()
     });
@@ -110,6 +162,25 @@ export async function POST(request: NextRequest) {
     ErrorHandler.logError(processedError);
 
     console.error('Parse API Error:', processedError.userMessage);
+
+    // 保存失败任务到历史记录（T006）
+    try {
+      const failedTask: Task = {
+        id: crypto.randomUUID(),
+        title: 'Parse Failed',
+        url: failedUrl,
+        platform: 'unknown',
+        status: 'failed',
+        timestamp: new Date().toISOString(),
+        error: {
+          message: processedError.userMessage,
+          code: 'code' in processedError && typeof processedError.code === 'string' ? processedError.code : 'PARSE_ERROR',
+        },
+      };
+      await taskStore.saveTask(failedTask);
+    } catch (taskError) {
+      console.warn('Failed to save failed task to history:', taskError);
+    }
 
     const result: ParseResult = {
       success: false,
