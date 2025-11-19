@@ -136,8 +136,8 @@ Paths use existing Next.js project structure:
 
 - [X] T041 [P] [US3] Create type guard functions (isArticleContent, isVideoContent, isImageGalleryContent, isBookContent, isTweetContent) in src/lib/types/content.ts ✅
 - [X] T042 [P] [US3] Create Zod schemas for all content types in src/lib/types/content-schemas.ts ✅ (Already exists from Phase 1)
-- [ ] T043 [US3] Update ParserManager.parse() to return properly typed ParsedContent in src/lib/parsers/index.ts
-- [ ] T044 [US3] Update /api/parse route to handle multi-type responses in src/app/api/parse/route.ts
+- [X] T043 [US3] Update ParserManager.parse() to return properly typed ParsedContent in src/lib/parsers/index.ts ✅ (Already returns union type)
+- [X] T044 [US3] Update /api/parse route to handle multi-type responses in src/app/api/parse/route.ts ✅ (API v3.0.0 with multi-type examples)
 - [ ] T045 [US3] Add runtime validation using Zod schemas at parser-API boundary in src/app/api/parse/route.ts
 
 **Checkpoint**: Multi-type support complete - API returns correctly-typed content for all content types
