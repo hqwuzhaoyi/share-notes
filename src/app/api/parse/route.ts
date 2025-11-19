@@ -215,9 +215,10 @@ export async function OPTIONS() {
 export async function GET() {
   const apiInfo = {
     name: 'iOS Content Parser API',
-    version: '2.0.0',
-    description: '为iOS快捷指令设计的智能内容解析服务（支持AI增强）',
+    version: '3.0.0',
+    description: '为iOS快捷指令设计的智能内容解析服务（支持AI增强和多内容类型）',
     supported_platforms: parserManager.getSupportedPlatforms(),
+    supported_content_types: ['article', 'video', 'image-gallery', 'book', 'tweet'],
     ai_available: parserManager.isAIAvailable(),
     ai_models: parserManager.isAIAvailable() ? parserManager.getAIModels() : [],
     endpoints: {
@@ -258,6 +259,7 @@ export async function GET() {
       ai_enhanced_response: {
         success: true,
         data: {
+          type: 'article',
           title: '内容标题',
           content: '正文内容',
           images: ['图片URL1', '图片URL2'],
@@ -271,6 +273,37 @@ export async function GET() {
           tags: ['美食推荐', '探店', '网红餐厅'],
           contentType: 'review',
           aiEnhanced: true
+        },
+        ios_url: 'flomo://create?content=...',
+        parsed_at: '2024-01-01T00:00:00.000Z'
+      },
+      video_response: {
+        success: true,
+        data: {
+          type: 'video',
+          title: 'YouTube视频标题',
+          videoUrl: 'https://www.youtube.com/watch?v=xxxxx',
+          description: '视频描述',
+          cover: 'https://i.ytimg.com/vi/xxxxx/maxresdefault.jpg',
+          duration: 600,
+          platform: 'youtube',
+          originalUrl: 'https://www.youtube.com/watch?v=xxxxx',
+          author: '频道名称',
+          metadata: { videoId: 'xxxxx', channelName: '频道名称' }
+        },
+        ios_url: 'flomo://create?content=...',
+        parsed_at: '2024-01-01T00:00:00.000Z'
+      },
+      image_gallery_response: {
+        success: true,
+        data: {
+          type: 'image-gallery',
+          title: '小红书图片分享',
+          images: ['图片URL1', '图片URL2', '图片URL3'],
+          description: '图片描述文字',
+          platform: 'xiaohongshu',
+          originalUrl: 'https://xiaohongshu.com/explore/xxxxx',
+          author: '分享者'
         },
         ios_url: 'flomo://create?content=...',
         parsed_at: '2024-01-01T00:00:00.000Z'
