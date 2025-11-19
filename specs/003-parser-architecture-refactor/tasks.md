@@ -130,7 +130,7 @@ Paths use existing Next.js project structure:
 
 - [ ] T038 [P] [US3] Unit test for all content type Zod schemas in src/test/types/content-schemas.test.ts
 - [ ] T039 [P] [US3] Integration test for multi-type API responses in src/test/api/parse-multi-type.test.ts
-- [ ] T040 [P] [US3] Unit test for type guards (isVideoContent, isArticleContent, etc.) in src/test/types/type-guards.test.ts
+- [X] T040 [P] [US3] Unit test for type guards (isVideoContent, isArticleContent, etc.) in src/test/types/type-guards.test.ts ✅ (29 tests, fixed null safety)
 
 ### Implementation for User Story 3
 
