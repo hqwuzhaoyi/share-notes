@@ -15,6 +15,17 @@ export class PlatformDetector {
     wechat: [
       /mp\.weixin\.qq\.com/
     ],
+    'wechat-read': [
+      /weread\.qq\.com/
+    ],
+    youtube: [
+      /youtube\.com/,
+      /youtu\.be/
+    ],
+    twitter: [
+      /twitter\.com/,
+      /x\.com/
+    ],
     unknown: []
   };
 

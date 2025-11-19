@@ -9,6 +9,7 @@ import { BaseOutputFormatter, type PlatformCapabilities, type FormattedOutput, t
 import type { ParsedContent } from '../types/parser';
 import type { AIEnhancedContent } from '../types/ai';
 import { truncateForURL } from '../utils/url-truncate';
+import { getTextContent, getImages } from '../types/content';
 
 /**
  * Flomo platform formatter implementation
@@ -45,7 +46,7 @@ export class FlomoFormatter extends BaseOutputFormatter {
 
       const displayContent = useAIContent && aiContent.summary
         ? aiContent.summary
-        : content.content;
+        : getTextContent(content);
 
       // Build Flomo content
       let flomoContent = '';
@@ -98,7 +99,7 @@ export class FlomoFormatter extends BaseOutputFormatter {
       }
 
       // Filter valid image URLs
-      const validImages = content.images.filter(img => this.isValidImageUrl(img));
+      const validImages = getImages(content).filter(img => this.isValidImageUrl(img));
 
       // Build Flomo URL scheme
       const encodedContent = encodeURIComponent(safeContent);

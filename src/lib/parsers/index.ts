@@ -8,6 +8,7 @@ import type { ExtractionResult } from '../types/url-extractor';
 import { XiaohongshuParser } from './xiaohongshu';
 import { BilibiliParser } from './bilibili';
 import { WechatParser } from './wechat';
+import { YouTubeParser } from './youtube';
 import { OfetchParser } from './ofetch-parser';
 import { AIParser } from './ai-parser';
 
@@ -21,10 +22,11 @@ export class ParserManager {
     this.parsers.set('xiaohongshu', new XiaohongshuParser());
     this.parsers.set('bilibili', new BilibiliParser());
     this.parsers.set('wechat', new WechatParser());
-    
+    this.parsers.set('youtube', new YouTubeParser());
+
     // 通用fallback解析器
     this.fallbackParser = new OfetchParser();
-    
+
     // AI增强解析器
     this.aiParser = new AIParser();
   }
@@ -234,8 +236,9 @@ export const parserManager = new ParserManager();
 // 导出所有解析器类
 export {
   XiaohongshuParser,
-  BilibiliParser, 
+  BilibiliParser,
   WechatParser,
+  YouTubeParser,
   OfetchParser,
   AIParser
 };

@@ -8,6 +8,8 @@ import { ErrorHandler } from '@/lib/utils/error-handler';
 import { getEnvironmentType } from '@/lib/utils/environment-detector';
 import { taskStore } from '@/lib/storage/task-store';
 import { Task } from '@/lib/types/task';
+import { getTextContent, getImages } from '@/lib/types/content';
+import { ParsedContentSchema } from '@/lib/types/content-schemas';
 
 const iosFormatter = new IOSFormatterImpl(); // DEPRECATED: Kept for backward compatibility
 
@@ -77,6 +79,14 @@ export async function POST(request: NextRequest) {
       }
     );
 
+    // T045: Runtime validation using Zod schemas at parser-API boundary
+    const validationResult = ParsedContentSchema.safeParse(parsedContent);
+    if (!validationResult.success) {
+      console.warn('Parsed content failed Zod validation:', validationResult.error?.message);
+      // Continue with parsed content even if validation fails (backward compatibility)
+      // This logs validation errors for debugging without breaking existing functionality
+    }
+
     // 格式化输出 (NEW: Using formatter registry)
     let ios_url: string | undefined;
     if (output_format && output_format !== 'raw') {
@@ -115,8 +125,8 @@ export async function POST(request: NextRequest) {
         timestamp: new Date().toISOString(),
         content: {
           title: parsedContent.title,
-          content: parsedContent.content,
-          images: parsedContent.images,
+          content: getTextContent(parsedContent),
+          images: getImages(parsedContent),
           author: parsedContent.author,
           publishedAt: parsedContent.publishedAt ? (typeof parsedContent.publishedAt === 'string' ? parsedContent.publishedAt : parsedContent.publishedAt.toISOString()) : undefined,
           aiEnhanced: 'aiEnhanced' in parsedContent ? Boolean(parsedContent.aiEnhanced) : false,
@@ -214,9 +224,10 @@ export async function OPTIONS() {
 export async function GET() {
   const apiInfo = {
     name: 'iOS Content Parser API',
-    version: '2.0.0',
-    description: '为iOS快捷指令设计的智能内容解析服务（支持AI增强）',
+    version: '3.0.0',
+    description: '为iOS快捷指令设计的智能内容解析服务（支持AI增强和多内容类型）',
     supported_platforms: parserManager.getSupportedPlatforms(),
+    supported_content_types: ['article', 'video', 'image-gallery', 'book', 'tweet'],
     ai_available: parserManager.isAIAvailable(),
     ai_models: parserManager.isAIAvailable() ? parserManager.getAIModels() : [],
     endpoints: {
@@ -257,6 +268,7 @@ export async function GET() {
       ai_enhanced_response: {
         success: true,
         data: {
+          type: 'article',
           title: '内容标题',
           content: '正文内容',
           images: ['图片URL1', '图片URL2'],
@@ -270,6 +282,37 @@ export async function GET() {
           tags: ['美食推荐', '探店', '网红餐厅'],
           contentType: 'review',
           aiEnhanced: true
+        },
+        ios_url: 'flomo://create?content=...',
+        parsed_at: '2024-01-01T00:00:00.000Z'
+      },
+      video_response: {
+        success: true,
+        data: {
+          type: 'video',
+          title: 'YouTube视频标题',
+          videoUrl: 'https://www.youtube.com/watch?v=xxxxx',
+          description: '视频描述',
+          cover: 'https://i.ytimg.com/vi/xxxxx/maxresdefault.jpg',
+          duration: 600,
+          platform: 'youtube',
+          originalUrl: 'https://www.youtube.com/watch?v=xxxxx',
+          author: '频道名称',
+          metadata: { videoId: 'xxxxx', channelName: '频道名称' }
+        },
+        ios_url: 'flomo://create?content=...',
+        parsed_at: '2024-01-01T00:00:00.000Z'
+      },
+      image_gallery_response: {
+        success: true,
+        data: {
+          type: 'image-gallery',
+          title: '小红书图片分享',
+          images: ['图片URL1', '图片URL2', '图片URL3'],
+          description: '图片描述文字',
+          platform: 'xiaohongshu',
+          originalUrl: 'https://xiaohongshu.com/explore/xxxxx',
+          author: '分享者'
         },
         ios_url: 'flomo://create?content=...',
         parsed_at: '2024-01-01T00:00:00.000Z'

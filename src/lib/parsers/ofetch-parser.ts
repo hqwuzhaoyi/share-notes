@@ -52,6 +52,7 @@ export class OfetchParser extends AbstractBaseParser {
     const publishedAt = this.extractPublishDate($);
 
     return {
+      type: 'article' as const,
       title: this.cleanText(title),
       content: this.cleanText(content),
       images: this.filterImages(images),
