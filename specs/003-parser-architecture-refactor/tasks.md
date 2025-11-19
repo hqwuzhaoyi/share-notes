@@ -152,9 +152,9 @@ Paths use existing Next.js project structure:
 
 ### Tests for User Story 4
 
-- [ ] T046 [P] [US4] Backward compatibility test verifying legacy ParsedContent fields in src/test/api/backward-compatibility.test.ts
-- [ ] T047 [P] [US4] Formatter fallback test for unknown content types in src/test/formatters/multi-type.test.ts
-- [ ] T048 [P] [US4] API response structure test comparing before/after in src/test/api/response-structure.test.ts
+- [X] T046 [P] [US4] Backward compatibility test verifying legacy ParsedContent fields in src/test/api/backward-compatibility.test.ts ✅ (19 tests)
+- [X] T047 [P] [US4] Formatter fallback test for unknown content types in src/test/formatters/multi-type.test.ts ✅ (23 tests)
+- [X] T048 [P] [US4] API response structure test comparing before/after in src/test/api/response-structure.test.ts ✅ (22 tests)
 
 ### Implementation for User Story 4
 
