@@ -1,14 +1,33 @@
 // 解析器相关类型定义
+import type { PlatformType } from './platform';
+import type { ParsedContent } from './content';
 
-export interface ParsedContent {
-  title: string;
-  content: string;
-  images: string[];
-  author?: string;
-  publishedAt?: Date;
-  platform: PlatformType;
-  originalUrl: string;
+import type { ArticleContent } from './content';
+
+/**
+ * Legacy ParsedContent type alias for backward compatibility
+ * Maps to ArticleContent from the new type system
+ *
+ * @deprecated Use ParsedContent union type from './content' for new code
+ * This exists only to maintain backward compatibility with existing formatters
+ */
+export type LegacyParsedContent = ArticleContent;
+
+/**
+ * Helper: Convert legacy parser output (without type discriminator) to ArticleContent
+ * Used internally by legacy parsers until they are migrated to new architecture
+ */
+export function toLegacyArticleContent(
+  legacy: Omit<ArticleContent, 'type'>
+): ArticleContent {
+  return {
+    ...legacy,
+    type: 'article',
+  };
 }
+
+// Re-export types for backward compatibility
+export type { ParsedContent, PlatformType };
 
 export interface ParseResult {
   success: boolean;
@@ -33,8 +52,6 @@ export interface ParserOptions {
   usePlaywright?: boolean;
   preloadedHtml?: string; // iOS快捷指令预取的HTML内容
 }
-
-export type PlatformType = 'xiaohongshu' | 'bilibili' | 'wechat' | 'unknown';
 
 export type OutputFormat = 'flomo' | 'notes' | 'raw';
 

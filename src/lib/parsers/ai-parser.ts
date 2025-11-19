@@ -5,6 +5,7 @@ import { AIEnhancedContent, AIOptions } from '../types/ai';
 import { LangChainClient } from '../ai/langchain-client';
 import { aiCache } from '../ai/cache';
 import { AI_CONFIG } from '../ai/config';
+import { getTextContent } from '../types/content';
 
 export class AIParser extends AbstractBaseParser {
   platform = 'unknown' as const;
@@ -67,19 +68,22 @@ export class AIParser extends AbstractBaseParser {
 
     const tasks = [];
 
+    // Get text content using type-safe helper
+    const textContent = getTextContent(content);
+
     // 生成摘要
-    if (options.enableSummary && content.content) {
-      tasks.push(this.addSummary(enhancedContent, content.content, options));
+    if (options.enableSummary && textContent) {
+      tasks.push(this.addSummary(enhancedContent, textContent, options));
     }
 
     // 优化标题
-    if (options.enableTitleOptimization && content.title && content.content) {
-      tasks.push(this.addOptimizedTitle(enhancedContent, content.title, content.content, options));
+    if (options.enableTitleOptimization && content.title && textContent) {
+      tasks.push(this.addOptimizedTitle(enhancedContent, content.title, textContent, options));
     }
 
     // 内容分类
-    if (options.enableCategorization && content.content) {
-      tasks.push(this.addCategorization(enhancedContent, content.content, options));
+    if (options.enableCategorization && textContent) {
+      tasks.push(this.addCategorization(enhancedContent, textContent, options));
     }
 
     // 并行执行AI任务
@@ -117,6 +121,7 @@ export class AIParser extends AbstractBaseParser {
       }
 
       const parsedContent: ParsedContent = {
+        type: 'article' as const,
         title: result.data.title,
         content: result.data.content,
         images: this.filterImages(result.data.images || []),

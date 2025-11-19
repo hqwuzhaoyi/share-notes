@@ -6,6 +6,7 @@
  */
 
 import type { ParsedContent } from './parser';
+import { hasTextContent } from './content';
 
 /**
  * Platform capability declaration
@@ -175,10 +176,10 @@ export abstract class BaseOutputFormatter {
    */
   protected validateContent(content: ParsedContent): FormatterResult<ParsedContent> {
     // Basic structural check - must have some content
-    if (!content.title && !content.content) {
+    if (!content.title && !hasTextContent(content)) {
       return Err(
         'INVALID_CONTENT',
-        'Content must have title or content'
+        'Content must have title or text content'
       );
     }
 

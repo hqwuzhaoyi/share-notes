@@ -9,6 +9,7 @@ import { BaseOutputFormatter, type PlatformCapabilities, type FormattedOutput, t
 import type { ParsedContent } from '../types/parser';
 import type { AIEnhancedContent } from '../types/ai';
 import { truncateForURL } from '../utils/url-truncate';
+import { getTextContent, getImages } from '../types/content';
 
 /**
  * Apple Notes platform formatter implementation
@@ -45,7 +46,7 @@ export class NotesFormatter extends BaseOutputFormatter {
 
       const displayContent = useAIContent && aiContent.summary
         ? aiContent.summary
-        : content.content;
+        : getTextContent(content);
 
       // Build Notes content
       let notesContent = '';
@@ -71,9 +72,10 @@ export class NotesFormatter extends BaseOutputFormatter {
       }
 
       // Images as text URLs (Notes doesn't support image embedding)
-      if (content.images.length > 0) {
+      const contentImages = getImages(content);
+      if (contentImages.length > 0) {
         notesContent += '📷 图片链接：\n';
-        content.images.forEach((img, index) => {
+        contentImages.forEach((img, index) => {
           notesContent += `${index + 1}. ${img}\n`;
         });
         notesContent += '\n';
@@ -136,8 +138,9 @@ export class NotesFormatter extends BaseOutputFormatter {
     let fallback = '';
     if (title) fallback += `${title}\n\n`;
     if (content) fallback += `${content}\n\n`;
-    if (original.images.length > 0) {
-      fallback += `图片:\n${original.images.map((img, i) => `${i + 1}. ${img}`).join('\n')}\n\n`;
+    const images = getImages(original);
+    if (images.length > 0) {
+      fallback += `图片:\n${images.map((img, i) => `${i + 1}. ${img}`).join('\n')}\n\n`;
     }
     fallback += `链接: ${original.originalUrl}`;
     return fallback;

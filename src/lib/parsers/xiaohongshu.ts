@@ -324,6 +324,7 @@ export class XiaohongshuParser extends AbstractBaseParser {
     const author = this.extractXhsAuthor($);
 
     return {
+      type: 'article' as const,
       title: this.cleanText(title),
       content: this.cleanText(content),
       images: this.filterImages(images),
@@ -717,6 +718,7 @@ export class XiaohongshuParser extends AbstractBaseParser {
     const iosShortcutSuggestion = this.generateIOSShortcutSuggestion(url);
     
     return {
+      type: 'article' as const,
       title: '⚠️ 内容解析受限 - 建议使用iOS快捷指令',
       content: `由于Vercel Serverless环境限制，无法完全解析此小红书内容。
 
@@ -802,6 +804,7 @@ ${iosShortcutSuggestion}`,
       
       // 返回错误信息，但不抛出异常
       return {
+        type: 'article' as const,
         title: '解析失败',
         content: `Vercel环境下无法访问该小红书内容。错误信息: ${error instanceof Error ? error.message : '未知错误'}。建议使用iOS快捷指令预取HTML内容，或在本地环境中测试。`,
         images: [],

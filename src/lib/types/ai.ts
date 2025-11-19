@@ -1,14 +1,18 @@
 // AI相关类型定义
-import { ParsedContent } from './parser';
+import type { ParsedContent } from './content';
 
-export interface AIEnhancedContent extends ParsedContent {
+/**
+ * AI enhancement metadata that can be added to any content type
+ * Uses intersection type to preserve content type discriminator
+ */
+export type AIEnhancedContent = ParsedContent & {
   summary?: string;
   optimizedTitle?: string;
   categories?: string[];
   tags?: string[];
   contentType?: ContentType;
   aiEnhanced: boolean;
-}
+};
 
 export type ContentType = 
   | 'article'      // 文章

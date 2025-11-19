@@ -17,6 +17,11 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 - **v1.0**: Basic parsing with ofetch + Playwright fallback
 - **v2.0**: AI enhancement with LangChain (summary, title optimization, categorization)
 - **v2.1**: Output formatter refactoring - strategy pattern with capability discovery (Feature 002)
+- **v3.0**: Parser architecture refactor - content type system + strategy patterns (Feature 003)
+  - 5 content types: article, video, image-gallery, book, tweet
+  - 95% code reduction (808 lines → 34 lines per parser)
+  - YouTube platform support
+  - Strategy composition (HtmlFetcher, ContentDetector, ContentExtractor)
 
 ## Architecture
 
@@ -38,9 +43,20 @@ src/
 │   │   ├── xiaohongshu.ts       # Platform-specific parser
 │   │   ├── bilibili.ts          # Platform-specific parser
 │   │   ├── wechat.ts            # Platform-specific parser
+│   │   ├── youtube.ts           # NEW (v3.0): YouTube parser
 │   │   ├── ofetch-parser.ts     # Generic HTTP parser
 │   │   ├── playwright-parser.ts # Dynamic content parser
-│   │   └── base.ts              # Abstract parser interface
+│   │   ├── base.ts              # Abstract parser interface
+│   │   │
+│   │   ├── strategies/          # NEW (v3.0): Reusable strategy patterns
+│   │   │   ├── html-fetcher.ts  # HtmlFetcher interface + implementations
+│   │   │   └── content-detector.ts # ContentDetector interface + implementations
+│   │   │
+│   │   └── extractors/          # NEW (v3.0): Content extraction strategies
+│   │       ├── base.ts          # ContentExtractor<T> generic interface
+│   │       ├── youtube-video-extractor.ts
+│   │       ├── xhs-video-extractor.ts
+│   │       └── bilibili-video-extractor.ts
 │   ├── formatters/               # NEW (v2.1): Formatter Layer (Strategy Pattern)
 │   │   ├── index.ts             # Formatter registration and exports
 │   │   ├── formatter-registry.ts # FormatterRegistry singleton
@@ -48,7 +64,10 @@ src/
 │   │   ├── notes-formatter.ts   # Apple Notes platform formatter
 │   │   └── raw-formatter.ts     # Raw JSON formatter
 │   ├── types/                    # Type Definitions
-│   │   ├── parser.ts            # Core parsing types
+│   │   ├── parser.ts            # Core parsing types (legacy)
+│   │   ├── content.ts           # NEW (v3.0): Content type system (discriminated unions)
+│   │   ├── content-schemas.ts   # NEW (v3.0): Zod runtime validation schemas
+│   │   ├── index.ts             # NEW (v3.0): Central type exports
 │   │   ├── formatter.ts         # NEW (v2.1): Formatter types and base class
 │   │   └── ai.ts                # AI-specific types (v2.0)
 │   └── utils/                    # Utility Layer
@@ -203,11 +222,12 @@ POST /api/parse
 ```
 
 ### Supported Platforms
-| Platform | URL Pattern | Parser Strategy | AI Enhancement |
-|----------|-------------|----------------|----------------|
-| 小红书 | `xiaohongshu.com/*` | Playwright | ✅ Auto-enabled |
-| B站 | `bilibili.com/*`, `b23.tv/*` | ofetch + Playwright fallback | ✅ Optional |
-| 微信公众号 | `mp.weixin.qq.com/*` | ofetch | ✅ Optional |
+| Platform | URL Pattern | Content Types | Parser Strategy | AI Enhancement |
+|----------|-------------|--------------|----------------|----------------|
+| 小红书 | `xiaohongshu.com/*` | video, image-gallery | Playwright | ✅ Auto-enabled |
+| B站 | `bilibili.com/*`, `b23.tv/*` | video | ofetch + Playwright fallback | ✅ Optional |
+| 微信公众号 | `mp.weixin.qq.com/*` | article | ofetch | ✅ Optional |
+| YouTube | `youtube.com/*`, `youtu.be/*` | video | ofetch | ✅ Optional |
 
 ### Output Formats
 - `flomo`: Returns flomo app URL scheme
@@ -277,40 +297,89 @@ curl http://localhost:4000/api/formatters
 - Shared utilities: `validateContent()`, `cleanText()`, `isValidImageUrl()`
 - Binary search URL truncation (100x faster than linear)
 
-### Adding New Platform Parser
+### Adding New Platform Parser (v3.0 - Recommended)
 
-1. **Create parser class** in `src/lib/parsers/[platform].ts`:
+**Quick Start**: See `/specs/003-parser-architecture-refactor/quickstart.md` for detailed guide (< 100 lines of code)
+
+**New parsers use strategy composition for 95% code reduction:**
+
+1. **Create content detector** (10 lines):
 ```typescript
-import { BaseParser } from './base';
-import { ParsedContent, ParserOptions, PlatformType } from '../types/parser';
-
-export class NewPlatformParser extends BaseParser {
-  platform: PlatformType = 'newplatform' as PlatformType; // Add to PlatformType union
-  
-  canParse(url: string): boolean {
-    return url.includes('newplatform.com');
-  }
-  
-  async parse(url: string, options?: ParserOptions): Promise<ParsedContent> {
-    // Implementation here
+// src/lib/parsers/strategies/content-detector.ts
+export class YouTubeContentDetector implements ContentDetector {
+  detect(url: string, html: string): ContentType {
+    return 'video'; // YouTube is always video content
   }
 }
 ```
 
-2. **Register in ParserManager** (`src/lib/parsers/index.ts`):
+2. **Create content extractor** (40 lines):
 ```typescript
-this.parsers.set('newplatform', new NewPlatformParser());
+// src/lib/parsers/extractors/youtube-video-extractor.ts
+export class YouTubeVideoExtractor implements ContentExtractor<VideoContent> {
+  extract(html: string, url: string): VideoContent {
+    const $ = cheerio.load(html);
+
+    return {
+      type: 'video',
+      title: $('meta[property="og:title"]').attr('content') || 'YouTube Video',
+      videoUrl: url,
+      cover: $('meta[property="og:image"]').attr('content'),
+      duration: this.extractDuration($),
+      description: $('meta[property="og:description"]').attr('content') || '',
+      platform: 'youtube',
+      originalUrl: url,
+      metadata: { videoId: this.extractVideoId(url) }
+    };
+  }
+  // ... helper methods
+}
 ```
 
-3. **Update platform detector** (`src/lib/utils/platform-detector.ts`):
+3. **Create platform parser** (30 lines):
 ```typescript
-if (hostname.includes('newplatform.com')) return 'newplatform';
+// src/lib/parsers/youtube.ts
+export class YouTubeParser extends BaseParser {
+  platform = 'youtube' as const;
+  supportedContentTypes = ['video'] as const;
+
+  private htmlFetcher = new OfetchHtmlFetcher();
+  private extractor = new YouTubeVideoExtractor();
+
+  canParse(url: string): boolean {
+    return /youtube\.com|youtu\.be/i.test(url);
+  }
+
+  async parse(url: string, options?: ParserOptions): Promise<VideoContent> {
+    const html = options?.preloadedHtml || await this.htmlFetcher.fetch(url, options);
+    return this.extractor.extract(html, url);
+  }
+}
 ```
 
-4. **Update types** (`src/lib/types/parser.ts`):
+4. **Register parser** (5 lines):
 ```typescript
-export type PlatformType = 'xiaohongshu' | 'bilibili' | 'wechat' | 'newplatform' | 'unknown';
+// src/lib/parsers/index.ts
+import { YouTubeParser } from './youtube';
+
+constructor() {
+  this.parsers.set('youtube', new YouTubeParser());
+}
 ```
+
+5. **Update types** (1 line):
+```typescript
+// src/lib/types/parser.ts
+export type PlatformType = ... | 'youtube' | ...;
+```
+
+**Total: ~86 lines (vs 808 lines in old architecture)**
+
+**Key Benefits**:
+- Reusable HTML fetchers (Ofetch, Playwright)
+- Type-safe content extraction with generics
+- Shared detection logic across platforms
+- Zero modifications to existing parsers
 
 ### Modifying AI Enhancement
 
@@ -574,6 +643,8 @@ This project successfully combines traditional web scraping with modern AI enhan
 - TypeScript 5.x with React 19.1.0 and Next.js 15.5.0 + Next.js (App Router), React, Tailwind CSS 4 (001-task-visualization)
 - TypeScript 5.x with strict mode + Next.js 15.5.0, React 19.1.0, Zod 4.1.8 (002-formatter-refactor)
 - N/A (stateless formatting system) (002-formatter-refactor)
+- TypeScript 5.x (existing project standard) + Next.js 15.5.0, React 19.1.0, Zod 4.1.8 (for validation), Cheerio 1.1.2 (HTML parsing), Playwright 1.55.0 (browser automation), ofetch 1.4.1 (HTTP client) (003-parser-architecture-refactor)
+- N/A (stateless parsing system) (003-parser-architecture-refactor)
 
 ## Recent Changes
 - 001-task-visualization: Added TypeScript 5.x with React 19.1.0 and Next.js 15.5.0 + Next.js (App Router), React, Tailwind CSS 4

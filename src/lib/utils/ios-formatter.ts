@@ -13,6 +13,7 @@
 
 import { ParsedContent, IOSFormatter } from '../types/parser';
 import { AIEnhancedContent } from '../types/ai';
+import { getTextContent, getImages } from '../types/content';
 
 export class IOSFormatterImpl implements IOSFormatter {
   formatFlomo(content: ParsedContent): string {
@@ -21,9 +22,10 @@ export class IOSFormatterImpl implements IOSFormatter {
     const useAIContent = aiContent.aiEnhanced;
 
     const displayTitle = useAIContent && aiContent.optimizedTitle ? aiContent.optimizedTitle : content.title;
-    const displayContent = useAIContent && aiContent.summary ? aiContent.summary : content.content;
+    const displayContent = useAIContent && aiContent.summary ? aiContent.summary : getTextContent(content);
 
-    const { images, author, originalUrl } = content;
+    const images = getImages(content);
+    const { author, originalUrl } = content;
 
     // 构建flomo内容
     let flomoContent = '';
@@ -86,9 +88,10 @@ export class IOSFormatterImpl implements IOSFormatter {
     const useAIContent = aiContent.aiEnhanced;
 
     const displayTitle = useAIContent && aiContent.optimizedTitle ? aiContent.optimizedTitle : content.title;
-    const displayContent = useAIContent && aiContent.summary ? aiContent.summary : content.content;
+    const displayContent = useAIContent && aiContent.summary ? aiContent.summary : getTextContent(content);
 
-    const { images, author, originalUrl } = content;
+    const images = getImages(content);
+    const { author, originalUrl } = content;
 
     // 构建备忘录内容
     let notesContent = '';

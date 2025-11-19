@@ -5,8 +5,10 @@
  * Based on data-model.md specification.
  */
 
-// Platform type enumeration
-export type PlatformType = 'xiaohongshu' | 'bilibili' | 'wechat' | 'unknown';
+import type { PlatformType } from './platform';
+
+// Re-export for convenience
+export type { PlatformType };
 
 // Task status enumeration
 export type TaskStatus = 'success' | 'failed' | 'pending';

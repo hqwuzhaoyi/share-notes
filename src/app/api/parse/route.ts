@@ -8,6 +8,7 @@ import { ErrorHandler } from '@/lib/utils/error-handler';
 import { getEnvironmentType } from '@/lib/utils/environment-detector';
 import { taskStore } from '@/lib/storage/task-store';
 import { Task } from '@/lib/types/task';
+import { getTextContent, getImages } from '@/lib/types/content';
 
 const iosFormatter = new IOSFormatterImpl(); // DEPRECATED: Kept for backward compatibility
 
@@ -115,8 +116,8 @@ export async function POST(request: NextRequest) {
         timestamp: new Date().toISOString(),
         content: {
           title: parsedContent.title,
-          content: parsedContent.content,
-          images: parsedContent.images,
+          content: getTextContent(parsedContent),
+          images: getImages(parsedContent),
           author: parsedContent.author,
           publishedAt: parsedContent.publishedAt ? (typeof parsedContent.publishedAt === 'string' ? parsedContent.publishedAt : parsedContent.publishedAt.toISOString()) : undefined,
           aiEnhanced: 'aiEnhanced' in parsedContent ? Boolean(parsedContent.aiEnhanced) : false,
