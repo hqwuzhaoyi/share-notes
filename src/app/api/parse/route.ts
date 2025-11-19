@@ -9,6 +9,7 @@ import { getEnvironmentType } from '@/lib/utils/environment-detector';
 import { taskStore } from '@/lib/storage/task-store';
 import { Task } from '@/lib/types/task';
 import { getTextContent, getImages } from '@/lib/types/content';
+import { ParsedContentSchema } from '@/lib/types/content-schemas';
 
 const iosFormatter = new IOSFormatterImpl(); // DEPRECATED: Kept for backward compatibility
 
@@ -77,6 +78,14 @@ export async function POST(request: NextRequest) {
         environment: getEnvironmentType()
       }
     );
+
+    // T045: Runtime validation using Zod schemas at parser-API boundary
+    const validationResult = ParsedContentSchema.safeParse(parsedContent);
+    if (!validationResult.success) {
+      console.warn('Parsed content failed Zod validation:', validationResult.error?.message);
+      // Continue with parsed content even if validation fails (backward compatibility)
+      // This logs validation errors for debugging without breaking existing functionality
+    }
 
     // 格式化输出 (NEW: Using formatter registry)
     let ios_url: string | undefined;
