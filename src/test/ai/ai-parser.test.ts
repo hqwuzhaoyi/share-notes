@@ -2,6 +2,7 @@ import { describe, it, expect, beforeAll, vi } from 'vitest';
 import { AIParser } from '../../lib/parsers/ai-parser';
 import { XiaohongshuParser } from '../../lib/parsers/xiaohongshu';
 import { ParsedContent } from '../../lib/types/parser';
+import { getTextContent, getImages } from '../../lib/types/content';
 
 describe('🤖 AI功能测试 - 有AI vs 无AI对比', () => {
   let aiParser: AIParser;
@@ -12,6 +13,7 @@ describe('🤖 AI功能测试 - 有AI vs 无AI对比', () => {
   
   // Mock数据用于稳定测试
   const mockParsedContent: ParsedContent = {
+    type: 'article' as const,
     title: '飞猪万豪会员日闪促攻略',
     content: `飞猪万豪9月会员日闪促9.8-9.14酒店清单及成本一览来啦，单晚低至100元左右！飞猪万豪作为万豪的官方渠道，通过她预订是可以正常享受SNP和会员权益的，F4以上飞猪会员还可以开启8晚万豪白金挑战快速成为万豪白金会员，挑战期间也有白金会员权益如房间升级，行政酒廊使用，50%万豪积分加赠，免费双早等。大家也可以通过参加飞猪万豪闪促来完成白金挑战哦，会额外送许多积分，大大降低了升级万豪白金的成本。9月8日会员日闪促不仅有300+酒店参与闪促，最高送12000分，还会发放各种各种优惠券。活动期间大家不仅可以抢8折券，88折券，100-99券，188神券，还可以抽60和188红包，大家一定不要错过过哦！`,
     images: [
@@ -105,8 +107,8 @@ describe('🤖 AI功能测试 - 有AI vs 无AI对比', () => {
 
         // 验证原始内容保持不变
         expect(aiResult.title).toBe(mockParsedContent.title);
-        expect(aiResult.content).toBe(mockParsedContent.content);
-        expect(aiResult.images).toEqual(mockParsedContent.images);
+        expect(getTextContent(aiResult)).toBe(getTextContent(mockParsedContent));
+        expect(getImages(aiResult)).toEqual(getImages(mockParsedContent));
         expect(aiResult.platform).toBe(mockParsedContent.platform);
 
         console.log('✅ AI增强功能验证完成');
@@ -184,6 +186,7 @@ describe('🤖 AI功能测试 - 有AI vs 无AI对比', () => {
 
   describe('🎯 AI功能细分测试', () => {
     const shortContent: ParsedContent = {
+      type: 'article' as const,
       title: '短内容测试',
       content: '这是一个简短的测试内容。',
       images: ['https://test.com/img.jpg'],
@@ -208,7 +211,7 @@ describe('🤖 AI功能测试 - 有AI vs 无AI对比', () => {
         if ('summary' in result) {
           expect(result.summary!).toBeDefined();
           expect(result.summary!.length).toBeGreaterThan(10);
-          expect(result.summary!.length).toBeLessThan(mockParsedContent.content.length);
+          expect(result.summary!.length).toBeLessThan(getTextContent(mockParsedContent).length);
           console.log('📝 AI摘要质量验证通过:', result.summary!.substring(0, 50) + '...');
         }
 
@@ -320,6 +323,7 @@ describe('🤖 AI功能测试 - 有AI vs 无AI对比', () => {
       }
 
       const shortContent: ParsedContent = {
+        type: 'article' as const,
         title: '简短标题',
         content: '这是一段很短的内容，只有几个字。',
         images: [],
@@ -368,7 +372,7 @@ describe('🤖 AI功能测试 - 有AI vs 无AI对比', () => {
         // 应该回退到原始内容
         expect(result).toBeDefined();
         expect(result.title).toBe(mockParsedContent.title);
-        expect(result.content).toBe(mockParsedContent.content);
+        expect(getTextContent(result)).toBe(getTextContent(mockParsedContent));
         
         console.log('✅ AI服务不可用时的降级处理正常');
 
