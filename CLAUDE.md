@@ -16,6 +16,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 ### Version History
 - **v1.0**: Basic parsing with ofetch + Playwright fallback
 - **v2.0**: AI enhancement with LangChain (summary, title optimization, categorization)
+- **v2.1**: Output formatter refactoring - strategy pattern with capability discovery (Feature 002)
 
 ## Architecture
 
@@ -23,36 +24,48 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ```
 src/
-├── app/api/parse/route.ts          # Main API endpoint
+├── app/api/
+│   ├── parse/route.ts             # Main parsing API endpoint
+│   └── formatters/route.ts        # NEW (v2.1): Capability discovery endpoint
 ├── lib/
-│   ├── ai/                         # AI Enhancement Layer (v2.0)
-│   │   ├── cache.ts               # AI result caching
-│   │   ├── config.ts              # AI configuration
-│   │   └── langchain-client.ts    # LangChain integration
-│   ├── parsers/                   # Parser Layer
-│   │   ├── index.ts              # ParserManager (orchestrates all parsers)
-│   │   ├── ai-parser.ts          # AI enhancement orchestration
-│   │   ├── xiaohongshu.ts        # Platform-specific parser
-│   │   ├── bilibili.ts           # Platform-specific parser  
-│   │   ├── wechat.ts             # Platform-specific parser
-│   │   ├── ofetch-parser.ts      # Generic HTTP parser
-│   │   ├── playwright-parser.ts  # Dynamic content parser
-│   │   └── base.ts               # Abstract parser interface
-│   ├── types/                     # Type Definitions
-│   │   ├── parser.ts             # Core parsing types
-│   │   └── ai.ts                 # AI-specific types (v2.0)
-│   └── utils/                     # Utility Layer
-│       ├── ios-formatter.ts      # iOS URL scheme formatting
-│       ├── platform-detector.ts  # URL → platform mapping
-│       └── url-validator.ts      # URL validation & sanitization
+│   ├── ai/                        # AI Enhancement Layer (v2.0)
+│   │   ├── cache.ts              # AI result caching
+│   │   ├── config.ts             # AI configuration
+│   │   └── langchain-client.ts   # LangChain integration
+│   ├── parsers/                  # Parser Layer
+│   │   ├── index.ts             # ParserManager (orchestrates all parsers)
+│   │   ├── ai-parser.ts         # AI enhancement orchestration
+│   │   ├── xiaohongshu.ts       # Platform-specific parser
+│   │   ├── bilibili.ts          # Platform-specific parser
+│   │   ├── wechat.ts            # Platform-specific parser
+│   │   ├── ofetch-parser.ts     # Generic HTTP parser
+│   │   ├── playwright-parser.ts # Dynamic content parser
+│   │   └── base.ts              # Abstract parser interface
+│   ├── formatters/               # NEW (v2.1): Formatter Layer (Strategy Pattern)
+│   │   ├── index.ts             # Formatter registration and exports
+│   │   ├── formatter-registry.ts # FormatterRegistry singleton
+│   │   ├── flomo-formatter.ts   # Flomo platform formatter
+│   │   ├── notes-formatter.ts   # Apple Notes platform formatter
+│   │   └── raw-formatter.ts     # Raw JSON formatter
+│   ├── types/                    # Type Definitions
+│   │   ├── parser.ts            # Core parsing types
+│   │   ├── formatter.ts         # NEW (v2.1): Formatter types and base class
+│   │   └── ai.ts                # AI-specific types (v2.0)
+│   └── utils/                    # Utility Layer
+│       ├── ios-formatter.ts     # DEPRECATED (v2.1): Use lib/formatters instead
+│       ├── url-truncate.ts      # NEW (v2.1): Binary search URL truncation
+│       ├── platform-detector.ts # URL → platform mapping
+│       └── url-validator.ts     # URL validation & sanitization
 ```
 
 ### Design Patterns
 
-1. **Strategy Pattern**: Platform-specific parsers implementing BaseParser interface
-2. **Chain of Responsibility**: Fallback parsing strategy (platform → generic → AI)
-3. **Decorator Pattern**: AI enhancement wraps base parsing functionality
-4. **Singleton Pattern**: ParserManager instance (`parserManager`)
+1. **Strategy Pattern (Parsers)**: Platform-specific parsers implementing BaseParser interface
+2. **Strategy Pattern (Formatters v2.1)**: Platform-specific formatters extending BaseOutputFormatter
+3. **Chain of Responsibility**: Fallback parsing strategy (platform → generic → AI)
+4. **Decorator Pattern**: AI enhancement wraps base parsing functionality
+5. **Singleton Pattern**: ParserManager instance (`parserManager`), FormatterRegistry (`formatterRegistry`)
+6. **Registry Pattern (v2.1)**: FormatterRegistry manages all formatter instances with capability discovery
 
 ### Parsing Flow
 
@@ -68,7 +81,10 @@ URL Request → ParserManager
     │   ├── Content Summarization
     │   ├── Title Optimization
     │   └── Content Categorization
-    └── iOS Formatting (IOSFormatter)
+    └── Output Formatting (v2.1: FormatterRegistry)
+        ├── Get formatter: formatterRegistry.get(platform)
+        ├── Format content: formatter.format(parsedContent)
+        └── Return: FormattedOutput (url_scheme | shortcut_trigger | raw_content)
 ```
 
 ## Technology Stack
@@ -199,6 +215,67 @@ POST /api/parse
 - `raw`: Returns raw parsed data with AI enhancements
 
 ## Common Development Tasks
+
+### Adding New Output Formatter (v2.1 - Recommended)
+
+**Quick Start**: See `/specs/002-formatter-refactor/quickstart.md` for detailed guide (< 50 lines of code)
+
+1. **Create formatter class** in `src/lib/formatters/[platform]-formatter.ts`:
+```typescript
+import { BaseOutputFormatter, type PlatformCapabilities, type FormattedOutput, type FormatterResult, Ok, Err } from '../types/formatter';
+import type { ParsedContent } from '../types/parser';
+import { truncateForURL } from '../utils/url-truncate';
+
+export class NotionFormatter extends BaseOutputFormatter {
+  // Declare capabilities honestly
+  readonly capabilities: PlatformCapabilities = {
+    supportsImages: true,            // Notion supports images
+    supportsDirectCreate: false,      // Requires API/web interface
+    maxContentLength: 100000          // Conservative limit
+  };
+
+  format(content: ParsedContent): FormatterResult<FormattedOutput> {
+    // Validate using inherited method
+    const validated = this.validateContent(content);
+    if (!validated.success) return validated;
+
+    try {
+      // Use inherited utilities: cleanText(), isValidImageUrl()
+      const cleanedContent = this.cleanText(content.content);
+      const safeContent = truncateForURL(cleanedContent, this.capabilities.maxContentLength!);
+
+      return Ok({
+        type: 'url_scheme',
+        value: `notion://create?content=${encodeURIComponent(safeContent)}`,
+        fallback: `Notion: ${safeContent}`
+      });
+    } catch (error) {
+      return Err('FORMATTING_FAILED', `Notion formatting failed: ${error}`, error);
+    }
+  }
+}
+```
+
+2. **Register formatter** in `src/lib/formatters/index.ts`:
+```typescript
+import { NotionFormatter } from './notion-formatter';
+
+const notionFormatter = new NotionFormatter();
+formatterRegistry.register('notion', notionFormatter);
+```
+
+3. **Query capabilities** via API:
+```bash
+curl http://localhost:4000/api/formatters
+# Returns: {"notion": {"supportsImages": true, ...}}
+```
+
+**Key Benefits**:
+- Zero modifications to existing code (extensibility validated)
+- Fail-fast validation at registration time
+- Type-safe error handling with `FormatterResult<T>`
+- Shared utilities: `validateContent()`, `cleanText()`, `isValidImageUrl()`
+- Binary search URL truncation (100x faster than linear)
 
 ### Adding New Platform Parser
 
@@ -484,14 +561,19 @@ export class PlatformParser extends BaseParser {
 
 **Key Files to Know**:
 - `src/app/api/parse/route.ts` - Main API logic
-- `src/lib/parsers/index.ts` - Parser orchestration  
+- `src/app/api/formatters/route.ts` - NEW (v2.1): Capability discovery
+- `src/lib/parsers/index.ts` - Parser orchestration
+- `src/lib/formatters/index.ts` - NEW (v2.1): Formatter registration
 - `src/lib/ai/langchain-client.ts` - AI functionality
 - `test/test-api.js` - Comprehensive testing
+- `/specs/002-formatter-refactor/quickstart.md` - NEW (v2.1): Adding formatters guide
 
 This project successfully combines traditional web scraping with modern AI enhancement to create a powerful content parsing service optimized for iOS integration.
 
 ## Active Technologies
 - TypeScript 5.x with React 19.1.0 and Next.js 15.5.0 + Next.js (App Router), React, Tailwind CSS 4 (001-task-visualization)
+- TypeScript 5.x with strict mode + Next.js 15.5.0, React 19.1.0, Zod 4.1.8 (002-formatter-refactor)
+- N/A (stateless formatting system) (002-formatter-refactor)
 
 ## Recent Changes
 - 001-task-visualization: Added TypeScript 5.x with React 19.1.0 and Next.js 15.5.0 + Next.js (App Router), React, Tailwind CSS 4

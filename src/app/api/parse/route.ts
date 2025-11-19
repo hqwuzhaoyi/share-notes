@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { parserManager } from '@/lib/parsers';
 import { IOSFormatterImpl } from '@/lib/utils/ios-formatter';
+import { formatterRegistry } from '@/lib/formatters'; // NEW: Use formatter registry
 import { ParseRequest, ParseResult, OutputFormat } from '@/lib/types/parser';
 import { AIOptions, AIModel } from '@/lib/types/ai';
 import { ErrorHandler } from '@/lib/utils/error-handler';
@@ -8,7 +9,7 @@ import { getEnvironmentType } from '@/lib/utils/environment-detector';
 import { taskStore } from '@/lib/storage/task-store';
 import { Task } from '@/lib/types/task';
 
-const iosFormatter = new IOSFormatterImpl();
+const iosFormatter = new IOSFormatterImpl(); // DEPRECATED: Kept for backward compatibility
 
 export async function POST(request: NextRequest) {
   try {
@@ -76,12 +77,31 @@ export async function POST(request: NextRequest) {
       }
     );
 
-    // 格式化输出
+    // 格式化输出 (NEW: Using formatter registry)
     let ios_url: string | undefined;
-    if (output_format === 'flomo') {
-      ios_url = iosFormatter.formatFlomo(parsedContent);
-    } else if (output_format === 'notes') {
-      ios_url = iosFormatter.formatNotes(parsedContent);
+    if (output_format && output_format !== 'raw') {
+      try {
+        const formatter = formatterRegistry.get(output_format);
+        const formatResult = formatter.format(parsedContent);
+
+        if (!formatResult.success) {
+          // Formatting failed - throw to trigger fallback
+          throw formatResult.error;
+        }
+
+        ios_url = formatResult.data.value;
+      } catch (formatterError) {
+        // Fallback to old formatter only if new formatter unavailable or fails
+        console.warn(`New formatter failed for ${output_format}, using legacy formatter:`, formatterError);
+        if (output_format === 'flomo') {
+          ios_url = iosFormatter.formatFlomo(parsedContent);
+        } else if (output_format === 'notes') {
+          ios_url = iosFormatter.formatNotes(parsedContent);
+        } else {
+          // Unknown format - re-throw error
+          throw new Error(`Unsupported output format: ${output_format}`);
+        }
+      }
     }
 
     // 保存任务到历史记录（T006）

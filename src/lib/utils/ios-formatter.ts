@@ -1,3 +1,16 @@
+/**
+ * @deprecated This file is deprecated as of Feature 002 (formatter refactoring).
+ * Use the new formatter system in `@/lib/formatters` instead.
+ *
+ * Migration guide:
+ * - Instead of `IOSFormatterImpl`, use `formatterRegistry.get('flomo')` or `formatterRegistry.get('notes')`
+ * - New system supports capability discovery and extensibility
+ * - See `/specs/002-formatter-refactor/quickstart.md` for adding new formatters
+ *
+ * This file is kept temporarily for backward compatibility during migration.
+ * Will be removed in a future version.
+ */
+
 import { ParsedContent, IOSFormatter } from '../types/parser';
 import { AIEnhancedContent } from '../types/ai';
 

@@ -8,9 +8,9 @@
 'use client';
 
 import { useRouter, useSearchParams } from 'next/navigation';
-import { PaginationInfo } from '@/lib/types/task';
+import type { PaginationInfo } from '@/lib/types/task';
 
-interface PaginationProps extends PaginationInfo {}
+type PaginationProps = PaginationInfo;
 
 export function Pagination({
   currentPage,

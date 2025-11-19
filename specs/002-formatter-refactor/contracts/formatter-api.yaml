@@ -1,0 +1,333 @@
+openapi: 3.0.3
+info:
+  title: Formatter API
+  description: |
+    Platform formatter capability discovery and usage API.
+
+    This API exposes formatter capabilities and maintains backward compatibility
+    with the existing `/api/parse` endpoint.
+  version: 2.0.0
+  contact:
+    name: iOS Content Parser Team
+
+servers:
+  - url: http://localhost:4000
+    description: Development server
+  - url: https://your-domain.vercel.app
+    description: Production server
+
+paths:
+  /api/formatters:
+    get:
+      summary: List all formatter capabilities
+      description: |
+        Returns capabilities for all registered platform formatters.
+
+        Clients can use this endpoint to discover:
+        - Available output platforms
+        - Platform feature support (images, direct create)
+        - Content length limits
+      operationId: listFormatterCapabilities
+      tags:
+        - Formatters
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties:
+                  $ref: '#/components/schemas/PlatformCapabilities'
+              example:
+                flomo:
+                  supportsImages: true
+                  supportsDirectCreate: true
+                  maxContentLength: 50000
+                notes:
+                  supportsImages: false
+                  supportsDirectCreate: false
+                  maxContentLength: 30000
+                raw:
+                  supportsImages: true
+                  supportsDirectCreate: true
+
+  /api/parse:
+    post:
+      summary: Parse content and format for output platform
+      description: |
+        Parses content from a URL and formats it for the specified output platform.
+
+        **Backward Compatibility**: This endpoint maintains 100% compatibility
+        with v1.0 responses. Internal implementation uses FormatterRegistry
+        but external contract is unchanged.
+      operationId: parseContent
+      tags:
+        - Parsing
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ParseRequest'
+            examples:
+              flomoWithImages:
+                summary: Flomo with images
+                value:
+                  url: "https://xiaohongshu.com/explore/xxxxx"
+                  output_format: "flomo"
+                  ai_enhance: true
+              notesBasic:
+                summary: Apple Notes basic
+                value:
+                  url: "https://bilibili.com/video/xxxxx"
+                  output_format: "notes"
+              rawFormat:
+                summary: Raw JSON output
+                value:
+                  url: "https://mp.weixin.qq.com/s/xxxxx"
+                  output_format: "raw"
+
+      responses:
+        '200':
+          description: Successful parse and format
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ParseResponse'
+              examples:
+                flomoSuccess:
+                  summary: Flomo URL scheme
+                  value:
+                    success: true
+                    data:
+                      title: "小红书笔记标题"
+                      content: "笔记内容..."
+                      platform: "xiaohongshu"
+                    ios_url: "flomo://create?content=..."
+                    parsed_at: "2025-11-18T10:30:00Z"
+                notesSuccess:
+                  summary: Notes shortcut trigger
+                  value:
+                    success: true
+                    data:
+                      title: "B站视频标题"
+                      content: "视频简介..."
+                      platform: "bilibili"
+                    ios_url: "shortcuts://run-shortcut?name=SaveToNotes&..."
+                    parsed_at: "2025-11-18T10:30:00Z"
+
+        '400':
+          description: Invalid request or formatting failed
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                invalidURL:
+                  summary: Invalid URL
+                  value:
+                    success: false
+                    error: "Invalid URL format"
+                unknownFormat:
+                  summary: Unknown output format
+                  value:
+                    success: false
+                    error: "Unknown platform \"notion\". Available: flomo, notes, raw"
+                contentTooLong:
+                  summary: Content exceeds limit
+                  value:
+                    success: false
+                    error: "Content exceeds max length: 60000 > 50000"
+
+        '500':
+          description: Server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+components:
+  schemas:
+    PlatformCapabilities:
+      type: object
+      required:
+        - supportsImages
+        - supportsDirectCreate
+      properties:
+        supportsImages:
+          type: boolean
+          description: Whether platform can embed/display images
+          example: true
+        supportsDirectCreate:
+          type: boolean
+          description: Whether platform has native URL scheme for direct creation
+          example: true
+        maxContentLength:
+          type: integer
+          minimum: 1
+          description: Maximum content length after URL encoding (optional)
+          example: 50000
+
+    ParseRequest:
+      type: object
+      required:
+        - url
+      properties:
+        url:
+          type: string
+          format: uri
+          description: URL to parse content from
+          example: "https://xiaohongshu.com/explore/xxxxx"
+        output_format:
+          type: string
+          enum: [flomo, notes, raw]
+          default: flomo
+          description: Output platform format
+        options:
+          $ref: '#/components/schemas/ParserOptions'
+        ai_enhance:
+          type: boolean
+          default: false
+          description: Enable AI content enhancement
+        ai_options:
+          $ref: '#/components/schemas/AIOptions'
+
+    ParserOptions:
+      type: object
+      properties:
+        timeout:
+          type: integer
+          minimum: 1000
+          maximum: 60000
+          description: Parse timeout in milliseconds
+          example: 30000
+        usePlaywright:
+          type: boolean
+          description: Force Playwright for dynamic content
+        preloadedHtml:
+          type: string
+          description: Pre-fetched HTML content (iOS Shortcuts optimization)
+
+    AIOptions:
+      type: object
+      properties:
+        enable_summary:
+          type: boolean
+          description: Generate content summary
+        enable_title_optimization:
+          type: boolean
+          description: Optimize title for clarity
+        enable_categorization:
+          type: boolean
+          description: Add content categories/tags
+        model:
+          type: string
+          description: AI model to use
+          example: "qwen-plus"
+
+    ParsedContent:
+      type: object
+      required:
+        - title
+        - content
+        - images
+        - platform
+        - originalUrl
+      properties:
+        title:
+          type: string
+          description: Content title
+          example: "小红书笔记标题"
+        content:
+          type: string
+          description: Main content text
+        images:
+          type: array
+          items:
+            type: string
+            format: uri
+          description: Image URLs
+        author:
+          type: string
+          description: Content author
+        publishedAt:
+          type: string
+          format: date-time
+          description: Publication timestamp
+        platform:
+          type: string
+          enum: [xiaohongshu, bilibili, wechat, unknown]
+          description: Source platform
+        originalUrl:
+          type: string
+          format: uri
+          description: Original content URL
+
+    ParseResponse:
+      type: object
+      required:
+        - success
+        - parsed_at
+      properties:
+        success:
+          type: boolean
+          description: Whether parsing succeeded
+        data:
+          $ref: '#/components/schemas/ParsedContent'
+        ios_url:
+          type: string
+          description: Formatted URL scheme or shortcut trigger
+          example: "flomo://create?content=..."
+        error:
+          type: string
+          description: Error message if success=false
+        parsed_at:
+          type: string
+          format: date-time
+          description: Parse timestamp
+        fallback:
+          $ref: '#/components/schemas/FallbackInfo'
+
+    FallbackInfo:
+      type: object
+      properties:
+        reason:
+          type: string
+          description: Why fallback was used
+        strategy:
+          type: string
+          enum: [preloadedHtml, ofetch, manual]
+        iosShortcutSuggestion:
+          type: string
+          description: Suggested iOS Shortcut configuration
+        environment:
+          type: string
+          description: Runtime environment info
+
+    ErrorResponse:
+      type: object
+      required:
+        - success
+        - error
+      properties:
+        success:
+          type: boolean
+          enum: [false]
+        error:
+          type: string
+          description: Human-readable error message
+        code:
+          type: string
+          description: Machine-readable error code
+          enum:
+            - FORMATTING_FAILED
+            - INVALID_CONTENT
+            - UNSUPPORTED_FEATURE
+            - URL_ENCODING_ERROR
+
+tags:
+  - name: Formatters
+    description: Formatter capability discovery
+  - name: Parsing
+    description: Content parsing and formatting

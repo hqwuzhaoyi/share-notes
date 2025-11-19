@@ -68,7 +68,7 @@ export function TaskFilters({ onFilterChange }: TaskFiltersProps) {
     if (debouncedSearch !== (searchParams.get('search') || '')) {
       updateFilters({ search: debouncedSearch });
     }
-  }, [debouncedSearch]);
+  }, [debouncedSearch, searchParams, updateFilters]);
 
   // Handle platform change
   const handlePlatformChange = (platform: string) => {
@@ -208,7 +208,7 @@ export function TaskFilters({ onFilterChange }: TaskFiltersProps) {
           <span className="text-gray-500 dark:text-gray-400">Active filters:</span>
           {searchInput && (
             <span className="inline-flex items-center gap-1 px-3 py-1 bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 rounded-full">
-              Search: "{searchInput}"
+              Search: &ldquo;{searchInput}&rdquo;
               <button
                 onClick={() => setSearchInput('')}
                 className="hover:text-blue-900 dark:hover:text-blue-100"
