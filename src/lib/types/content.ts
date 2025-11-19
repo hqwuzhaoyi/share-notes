@@ -155,6 +155,65 @@ export function toArticleContent(legacy: Omit<ArticleContent, 'type'>): ArticleC
   };
 }
 
+// ============================================================================
+// Type Guards (T041 - US3)
+// ============================================================================
+
+/**
+ * Type guard: Check if content is ArticleContent
+ * Enables TypeScript to narrow the union type to ArticleContent
+ *
+ * @param content - Parsed content to check
+ * @returns True if content is ArticleContent
+ */
+export function isArticleContent(content: ParsedContent): content is ArticleContent {
+  return content.type === 'article';
+}
+
+/**
+ * Type guard: Check if content is VideoContent
+ * Enables TypeScript to narrow the union type to VideoContent
+ *
+ * @param content - Parsed content to check
+ * @returns True if content is VideoContent
+ */
+export function isVideoContent(content: ParsedContent): content is VideoContent {
+  return content.type === 'video';
+}
+
+/**
+ * Type guard: Check if content is ImageGalleryContent
+ * Enables TypeScript to narrow the union type to ImageGalleryContent
+ *
+ * @param content - Parsed content to check
+ * @returns True if content is ImageGalleryContent
+ */
+export function isImageGalleryContent(content: ParsedContent): content is ImageGalleryContent {
+  return content.type === 'image-gallery';
+}
+
+/**
+ * Type guard: Check if content is BookContent
+ * Enables TypeScript to narrow the union type to BookContent
+ *
+ * @param content - Parsed content to check
+ * @returns True if content is BookContent
+ */
+export function isBookContent(content: ParsedContent): content is BookContent {
+  return content.type === 'book';
+}
+
+/**
+ * Type guard: Check if content is TweetContent
+ * Enables TypeScript to narrow the union type to TweetContent
+ *
+ * @param content - Parsed content to check
+ * @returns True if content is TweetContent
+ */
+export function isTweetContent(content: ParsedContent): content is TweetContent {
+  return content.type === 'tweet';
+}
+
 /**
  * Type guard: Check if content has text content field
  */
