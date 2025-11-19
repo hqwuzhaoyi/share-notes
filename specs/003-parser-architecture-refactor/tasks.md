@@ -96,9 +96,9 @@ Paths use existing Next.js project structure:
 
 ### Tests for User Story 2
 
-- [ ] T030 [P] [US2] Unit test for PlaywrightHtmlFetcher in src/test/parsers/strategies.test.ts
-- [ ] T031 [P] [US2] Unit test for OfetchHtmlFetcher in src/test/parsers/strategies.test.ts
-- [ ] T032 [P] [US2] Integration test for strategy composition in parser in src/test/parsers/strategy-composition.test.ts
+- [X] T030 [P] [US2] Unit test for PlaywrightHtmlFetcher in src/test/parsers/strategies.test.ts ✅ (10 tests, auto-skip in CI)
+- [X] T031 [P] [US2] Unit test for OfetchHtmlFetcher in src/test/parsers/strategies.test.ts ✅ (12 tests)
+- [X] T032 [P] [US2] Integration test for strategy composition in parser in src/test/parsers/strategy-composition.test.ts ✅ (17 tests)
 
 ### Implementation for User Story 2
 
